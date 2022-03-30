@@ -1,10 +1,10 @@
 # 3D Projections for Wireframe Rendering
 3D Projections starter code using the HTML5 Canvas 2D API
 
-##Task
+## Task
 Implement 3D line drawing by projecting models onto the view-plane. You will use HTML's Canvas 2D API.
 
-##3D Projections (to earn a C: 45 pts)
+## 3D Projections (to earn a C: 45 pts)
 - Implement perspective projection for 3D models: 35 pts
   - Transform models into canonical view volume
     - Implement the matrix functions in transforms.js
@@ -15,7 +15,7 @@ Implement 3D line drawing by projecting models onto the view-plane. You will use
   - A/D keys: translate the PRP and SRP along the u-axis
   - W/S keys: translate the PRP and SRP along the n-axis
 
-##Additional features (to earn a B or A)
+## Additional features (to earn a B or A)
 - Implement parallel projection for 3D models: 5 pts
   - Follows same steps as perspective
 - Generate vertices and edges for common models: 5 pts
@@ -28,7 +28,7 @@ Implement 3D line drawing by projecting models onto the view-plane. You will use
   - Defined in terms of revolutions per second
 - Left/right arrow keys: rotate SRP around the v-axis with the PRP as the origin: 5 pts
 
-##Scene
+## Scene
 Scenes will be defined as a JavaScript object. The scene will contain both view parameters and a description of the models.
 
 view:

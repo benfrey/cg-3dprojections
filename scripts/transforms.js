@@ -117,4 +117,5 @@ function Vector4(x, y, z, w) {
     let vec4 = new Vector(4);
     vec4.values = [x, y, z, w];
     return vec4;
+    var x = 1;
 }

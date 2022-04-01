@@ -3,6 +3,8 @@
 
 ## Task
 Implement 3D line drawing by projecting models onto the view-plane. You will use HTML's Canvas 2D API.
+</br>
+Project outline below:
 
 ## 3D Projections (to earn a C: 45 pts)
 - Implement perspective projection for 3D models: 35 pts

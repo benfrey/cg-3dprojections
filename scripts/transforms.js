@@ -1,13 +1,25 @@
 // create a 4x4 matrix to the parallel projection / view matrix
 function mat4x4Parallel(prp, srp, vup, clip) {
     // 1. translate PRP to origin
+    let parrallelprojection =new Matrix(4,4);
+    mat4x4Translate(parrallelprojection,-prp.x,-prp.y,-prp.z);
     // 2. rotate VRC such that (u,v,n) align with (x,y,z)
-    // 3. shear such that CW is on the z-axis
-    // 4. translate near clipping plane to origin
-    // 5. scale such that view volume bounds are ([-1,1], [-1,1], [-1,0])
+    let rotatation = new Matrix(4,4);
+    let n = normalize(prp.subtract(srp));
+    let u = normalize(vup.cross(n));
+    let v = n.cross(u);
 
+    // 3. shear such that CW is on the z-axis
+    let CW = Vector3(clip[0]+clip[1]/2,clip[2]+clip[3]/2,-clip[4]);
+    let DOP = CW - 0;
+    mat4x4ShearXY(parrallelprojection,-DOP.x/DOP.z,-DOP.y/DOP.z);
+    // 4. translate near clipping plane to origin
+    mat4x4Translate(parrallelprojection,0,0,clip[4]);
+    // 5. scale such that view volume bounds are ([-1,1], [-1,1], [-1,0])
+    mat4x4Scale(parrallelprojection,2/clip[1]-clip[0],2/clip[3]-clip[2],1/clip[4]);
     // ...
     // let transform = Matrix.multiply([...]);
+    
     // return transform;
 }
 

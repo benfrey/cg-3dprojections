@@ -61,7 +61,7 @@ function init() {
 
     // event handler for pressing arrow keys
     document.addEventListener('keydown', onKeyDown, false);
-    
+
     // start animation loop
     start_time = performance.now(); // current timestamp in milliseconds
     window.requestAnimationFrame(animate);
@@ -71,9 +71,9 @@ function init() {
 function animate(timestamp) {
     // step 1: calculate time (time since start)
     let time = timestamp - start_time;
-    
+
     // step 2: transform models based on time
-    // TODO: implement this!
+    // TODO: implement this! // may need some help friday
 
     // step 3: draw scene
     drawScene();
@@ -86,13 +86,13 @@ function animate(timestamp) {
 // Main drawing code - use information contained in variable `scene`
 function drawScene() {
     console.log(scene);
-    
+
     // TODO: implement drawing here!
     // For each model, for each edge
-    //  * transform to canonical view volume
-    //  * clip in 3D
-    //  * project to 2D
-    //  * draw line
+    //  * transform to canonical view volume // done
+    //  * clip in 3D // may need some help friday
+    //  * project to 2D // done
+    //  * draw line // may need some help friday
 }
 
 // Get outcode for vertex (parallel view volume)
@@ -146,30 +146,30 @@ function outcodePerspective(vertex, z_min) {
 // Clip line - should either return a new line (with two endpoints inside view volume) or null (if line is completely outside view volume)
 function clipLineParallel(line) {
     let result = null;
-    let p0 = Vector3(line.pt0.x, line.pt0.y, line.pt0.z); 
+    let p0 = Vector3(line.pt0.x, line.pt0.y, line.pt0.z);
     let p1 = Vector3(line.pt1.x, line.pt1.y, line.pt1.z);
     let out0 = outcodeParallel(p0);
     let out1 = outcodeParallel(p1);
-    
+
     // TODO: implement clipping here!
-    
+
     return result;
 }
 
 // Clip line - should either return a new line (with two endpoints inside view volume) or null (if line is completely outside view volume)
 function clipLinePerspective(line, z_min) {
     let result = null;
-    let p0 = Vector3(line.pt0.x, line.pt0.y, line.pt0.z); 
+    let p0 = Vector3(line.pt0.x, line.pt0.y, line.pt0.z);
     let p1 = Vector3(line.pt1.x, line.pt1.y, line.pt1.z);
     let out0 = outcodePerspective(p0, z_min);
     let out1 = outcodePerspective(p1, z_min);
-    
+
     // TODO: implement clipping here!
-    
+
     return result;
 }
 
-// Called when user presses a key on the keyboard down 
+// Called when user presses a key on the keyboard down
 function onKeyDown(event) {
     switch (event.keyCode) {
         case 37: // LEFT Arrow
@@ -231,7 +231,7 @@ function loadNewScene() {
     reader.readAsText(scene_file.files[0], 'UTF-8');
 }
 
-// Draw black 2D line with red endpoints 
+// Draw black 2D line with red endpoints
 function drawLine(x1, y1, x2, y2) {
     ctx.strokeStyle = '#000000';
     ctx.beginPath();

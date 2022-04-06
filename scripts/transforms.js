@@ -1,90 +1,96 @@
 // create a 4x4 matrix to the parallel projection / view matrix
 function mat4x4Parallel(prp, srp, vup, clip) {
-    // 1. translate PRP to origin
-    let parrallelprojection = new Matrix(4,4);
-    mat4x4Translate(parrallelprojection,-prp.x,-prp.y,-prp.z);
+    // 1. translate PRP to origin (see slide 9 of lecture 09)
+    let translationMatrix = new Matrix(4, 4);
+    mat4x4Translate(translationMatrix, -prp.x, -prp.y, -prp.z);
 
-    // 2. rotate VRC such that (u,v,n) align with (x,y,z)
-    let rotation = new Matrix(4,4);
+    // 2. rotate VRC such that (u,v,n) align with (x,y,z) (see slide 10 of lecture 09)
+    let rotationMatrix = new Matrix(4, 4);
     let n = prp.subtract(srp);
     n.normalize();
     let u = vup.cross(n);
     u.normalize();
     let v = n.cross(u);
-    rotation.values = [[u.x,u.y,u.z,0],
-                        [v.x,v.y,v.z,0],
-                        [n.x,n.y,n.z,0],
-                        [0,0,0,1]];
+    rotationMatrix.values = [[u.x, u.y, u.z, 0],
+                             [v.x, v.y, v.z, 0],
+                             [n.x, n.y, n.z, 0],
+                             [0, 0, 0, 1]];
 
-    // 3. shear such that CW is on the z-axis
-    let shearMatrix =new Matrix(4,4);
-    let CW = Vector3(clip[0]+clip[1]/2,clip[2]+clip[3]/2,-clip[4]);
-    let DOP = CW;
-    mat4x4ShearXY(shearMatrix,-DOP.x/DOP.z,-DOP.y/DOP.z);
+    // 3. shear such that cw is on the z-axis (see slide 11 of lecture 09)
+    let shearMatrix = new Matrix(4, 4);
+    let cw = Vector3((clip[0]+clip[1])/2, (clip[2]+clip[3])/2, -clip[4]); //cw is center of window [(left+right)/2, (btm+top)/2, -near]
+    let dop = cw - Vector3(0, 0, 0); //dop is direction of projection and is defined as cw - prp (note: prp is now at origin)
+    mat4x4ShearXY(shearMatrix, -dop.x/dop.z, -dop.y/dop.z);
 
-    // 4. translate near clipping plane to origin
-    let translateClippingMatrix =new Matrix(4,4);
-    mat4x4Translate(translateClippingMatrix,0,0,clip[4]);
+    // 4. translate near clipping plane to origin (see slide 12 of lecture 09)
+    let translateClippingMatrix = new Matrix(4, 4);
+    mat4x4Translate(translateClippingMatrix, 0, 0, clip[4]);
 
-    // 5. scale such that view volume bounds are ([-1,1], [-1,1], [-1,0])
+    // 5. scale such that view volume bounds are ([-1,1], [-1,1], [-1,0]) (see slide 13 of lecture 09)
     let scaleMatrix = new Matrix(4,4);
     mat4x4Scale(scaleMatrix,2/(clip[1]-clip[0]),2/(c)lip[3]-clip[2]),1/clip[4]);
 
-    let transform = Matrix.multiply([parrallelprojection,rotation,shearMatrix,translateClippingMatrix,scaleMatrix]);
+    // Final transformation by multiplying matrices through (see slide 14 of lecture 09)
+    let transform = Matrix.multiply([translationMatrix, rotationMatrix, shearMatrix, translateClippingMatrix, scaleMatrix]);
     return transform;
 }
 
 // create a 4x4 matrix to the perspective projection / view matrix
 function mat4x4Perspective(prp, srp, vup, clip) {
-    // 1. translate PRP to origin
-    let perspectiveprojection = new Matrix(4,4);
-    mat4x4Translate(perspectiveprojection,-prp.x,-prp.y,-prp.z);
+    // 1. translate PRP to origin (see slide 17 of lecture 09)
+    let translationMatrix = new Matrix(4, 4);
+    mat4x4Translate(translationMatrix,-prp.x,-prp.y,-prp.z);
 
-    // 2. rotate VRC such that (u,v,n) align with (x,y,z)
-    let rotation = new Matrix(4,4);
+    // 2. rotate VRC such that (u,v,n) align with (x,y,z) (see slide 18 of lecture 09)
+    let rotationMatrix = new Matrix(4, 4);
     let n = prp.subtract(srp);
     n.normalize();
     let u = vup.cross(n);
     u.normalize();
     let v = n.cross(u);
-    rotation.values = [[u.x,u.y,u.z,0],
-                        [v.x,v.y,v.z,0],
-                        [n.x,n.y,n.z,0],
-                        [0,0,0,1]];
+    rotationMatrix.values = [[u.x, u.y, u.z, 0],
+                             [v.x, v.y, v.z, 0],
+                             [n.x, n.y, n.z, 0],
+                             [0, 0, 0, 1]];
 
-    // 3. shear such that CW is on the z-axis
-    let shearMatrix =new Matrix(4,4);
-    let CW = Vector3(clip[0]+clip[1]/2,clip[2]+clip[3]/2,-clip[4]);
-    let DOP = CW - 0;
-    mat4x4ShearXY(shearMatrix,-DOP.x/DOP.z,-DOP.y/DOP.z);
+    // 3. shear such that CW is on the z-axis (see slide 19 of lecture 09)
+    let shearMatrix = new Matrix(4, 4);
+    let cw = Vector3((clip[0]+clip[1])/2, (clip[2]+clip[3])/2, -clip[4]); //cw is center of window [(left+right)/2, (btm+top)/2, -near]
+    let dop = cw - Vector3(0, 0, 0); //dop is direction of projection and is defined as cw - prp (note: prp is now at origin)
+    mat4x4ShearXY(shearMatrix, -dop.x/dop.z, -dop.y/dop.z);
 
-    // 4. scale such that view volume bounds are ([z,-z], [z,-z], [-1,zmin])
-    let scaleMatrix =new Matrix(4,4);
-    mat4x4Scale(scaleMatrix,(2*clip[4])/((clip[1]-clip[0])*clip[5]),(2*clip[4])/((clip[3]-clip[2])*clip[5]),1/clip[5]);
+    // 4. scale such that view volume bounds are ([z,-z], [z,-z], [-1,zmin]) (see slide 20 of lecture 09)
+    let scaleMatrix = new Matrix(4,4);
+    mat4x4Scale(scaleMatrix, (2*clip[4])/((clip[1]-clip[0])*clip[5]), (2*clip[4])/((clip[3]-clip[2])*clip[5]), 1/clip[5]);
 
-    let transform = Matrix.multiply([perspectiveprojection,rotation,shearMatrix,translateClippingMatrix]);
+    // Final transformation by multiplying matrices through (see slide 23 of lecture 09)
+    let transform = Matrix.multiply([translationMatrix, rotationMatrix, shearMatrix, scaleMatrix]);
     return transform;
 }
 
 // create a 4x4 matrix to project a parallel image on the z=0 plane
 function mat4x4MPar() {
     let mpar = new Matrix(4, 4);
-    // mpar.values = ...;
-    mpar.values = [[1,0,0,0],
-                     [0,1,0,0],
-                     [0,0,0,0],
-                     [0,0,0,1]];
+
+    // 3D project to 2D (see slide 4 of lecture 09)
+    mpar.values = [[1, 0, 0, 0],
+                   [0, 1, 0, 0],
+                   [0, 0, 0, 0],
+                   [0, 0, 0, 1]];
+
     return mpar;
 }
 
 // create a 4x4 matrix to project a perspective image on the z=-1 plane
 function mat4x4MPer() {
     let mper = new Matrix(4, 4);
-    // mper.values = ...;
-    mper.values = [[1,0,0,0],
-                     [0,1,0,0],
-                     [0,0,1,0],
-                     [0,0,-1,0]];
+
+    // 3D project to 2D (see slide 7 of lecture 09)
+    mper.values = [[1, 0, 0, 0],
+                   [0, 1, 0, 0],
+                   [0, 0, 1, 0],
+                   [0, 0, -1, 0]];
+
     return mper;
 }
 

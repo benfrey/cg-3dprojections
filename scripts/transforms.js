@@ -19,17 +19,23 @@ function mat4x4Parallel(prp, srp, vup, clip) {
     mat4x4Scale(parrallelprojection,2/clip[1]-clip[0],2/clip[3]-clip[2],1/clip[4]);
     // ...
     // let transform = Matrix.multiply([...]);
-    
+      //𝑁_𝑝𝑎𝑟=𝑆_𝑝𝑎𝑟⋅𝑇_𝑝𝑎𝑟⋅〖𝑆𝐻〗_𝑝𝑎𝑟⋅𝑅⋅𝑇(−𝑃𝑅𝑃)
+
     // return transform;
 }
 
 // create a 4x4 matrix to the perspective projection / view matrix
 function mat4x4Perspective(prp, srp, vup, clip) {
     // 1. translate PRP to origin
+    let perspectiveprojection =new Matrix(4,4);
+    mat4x4Translate(perspectiveprojection,-prp.x,-prp.y,-prp.z);
     // 2. rotate VRC such that (u,v,n) align with (x,y,z)
     // 3. shear such that CW is on the z-axis
+    let CW = Vector3(clip[0]+clip[1]/2,clip[2]+clip[3]/2,-clip[4]);
+    let DOP = CW - 0;
+    mat4x4ShearXY(perspectiveprojection,-DOP.x/DOP.z,-DOP.y/DOP.z);
     // 4. scale such that view volume bounds are ([z,-z], [z,-z], [-1,zmin])
-
+    mat4x4Scale(perspectiveprojection,2*clip[3]/clip[1]-clip[0],2*clip[3]/clip[3]-clip[2],1/clip[4]);
     // ...
     // let transform = Matrix.multiply([...]);
     // return transform;

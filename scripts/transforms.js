@@ -45,6 +45,10 @@ function mat4x4Perspective(prp, srp, vup, clip) {
 function mat4x4MPar() {
     let mpar = new Matrix(4, 4);
     // mpar.values = ...;
+    mat4x4.values = [[1,0,0,0],
+                     [0,1,0,0],
+                     [0,0,1,0],
+                     [0,0,0,0]];
     return mpar;
 }
 
@@ -52,6 +56,10 @@ function mat4x4MPar() {
 function mat4x4MPer() {
     let mper = new Matrix(4, 4);
     // mper.values = ...;
+    mat4x4.values = [[1,0,0,0],
+                     [0,1,0,0],
+                     [0,0,1,0],
+                     [0,0,-1,0]];
     return mper;
 }
 

@@ -3,6 +3,8 @@ function mat4x4Parallel(prp, srp, vup, clip) {
     // 1. translate PRP to origin (see slide 9 of lecture 09)
     let translationMatrix = new Matrix(4, 4);
     mat4x4Translate(translationMatrix, -prp.x, -prp.y, -prp.z);
+    //console.log("Here 1")
+    //console.log(translationMatrix);
 
     // 2. rotate VRC such that (u,v,n) align with (x,y,z) (see slide 10 of lecture 09)
     let rotationMatrix = new Matrix(4, 4);
@@ -15,21 +17,29 @@ function mat4x4Parallel(prp, srp, vup, clip) {
                              [v.x, v.y, v.z, 0],
                              [n.x, n.y, n.z, 0],
                              [0, 0, 0, 1]];
+    //console.log("Here 2")
+    //console.log(rotationMatrix);
 
     // 3. shear such that cw is on the z-axis (see slide 11 of lecture 09)
     let shearMatrix = new Matrix(4, 4);
     let cw = Vector3((clip[0]+clip[1])/2, (clip[2]+clip[3])/2, -clip[4]); //cw is center of window [(left+right)/2, (btm+top)/2, -near]
     let dop = cw - Vector3(0, 0, 0); //dop is direction of projection and is defined as cw - prp (note: prp is now at origin)
     mat4x4ShearXY(shearMatrix, -dop.x/dop.z, -dop.y/dop.z);
+    //console.log("Here 3")
+    //console.log(shearMatrix);
 
     // 4. translate near clipping plane to origin (see slide 12 of lecture 09)
     let translateClippingMatrix = new Matrix(4, 4);
     mat4x4Translate(translateClippingMatrix, 0, 0, clip[4]);
+    //console.log("Here 4")
+    //console.log(translateClippingMatrix);
 
     // 5. scale such that view volume bounds are ([-1,1], [-1,1], [-1,0]) (see slide 13 of lecture 09)
     let scaleMatrix = new Matrix(4,4);
-    mat4x4Scale(scaleMatrix,2/(clip[1]-clip[0]),2/(c)lip[3]-clip[2]),1/clip[4]);
-
+    mat4x4Scale(scaleMatrix,2/(clip[1]-clip[0]),2/(clip[3]-clip[2]),1/clip[4]);
+    //console.log("Here 5")
+    //console.log(scaleMatrix);
+    
     // Final transformation by multiplying matrices through (see slide 14 of lecture 09)
     let transform = Matrix.multiply([translationMatrix, rotationMatrix, shearMatrix, translateClippingMatrix, scaleMatrix]);
     return transform;
@@ -39,7 +49,9 @@ function mat4x4Parallel(prp, srp, vup, clip) {
 function mat4x4Perspective(prp, srp, vup, clip) {
     // 1. translate PRP to origin (see slide 17 of lecture 09)
     let translationMatrix = new Matrix(4, 4);
-    mat4x4Translate(translationMatrix,-prp.x,-prp.y,-prp.z);
+    mat4x4Translate(translationMatrix, -prp.x, -prp.y, -prp.z);
+    //console.log("Here 1")
+    //console.log(translationMatrix);
 
     // 2. rotate VRC such that (u,v,n) align with (x,y,z) (see slide 18 of lecture 09)
     let rotationMatrix = new Matrix(4, 4);
@@ -52,19 +64,25 @@ function mat4x4Perspective(prp, srp, vup, clip) {
                              [v.x, v.y, v.z, 0],
                              [n.x, n.y, n.z, 0],
                              [0, 0, 0, 1]];
+    //console.log("Here 2")
+    //console.log(rotationMatrix);
 
     // 3. shear such that CW is on the z-axis (see slide 19 of lecture 09)
     let shearMatrix = new Matrix(4, 4);
     let cw = Vector3((clip[0]+clip[1])/2, (clip[2]+clip[3])/2, -clip[4]); //cw is center of window [(left+right)/2, (btm+top)/2, -near]
-    let dop = cw - Vector3(0, 0, 0); //dop is direction of projection and is defined as cw - prp (note: prp is now at origin)
+    let dop = cw.subtract(Vector3(0, 0, 0)); //dop is direction of projection and is defined as cw - prp (note: prp is now at origin)
     mat4x4ShearXY(shearMatrix, -dop.x/dop.z, -dop.y/dop.z);
+    //console.log("Here 3")
+    //console.log(shearMatrix);
 
     // 4. scale such that view volume bounds are ([z,-z], [z,-z], [-1,zmin]) (see slide 20 of lecture 09)
     let scaleMatrix = new Matrix(4,4);
     mat4x4Scale(scaleMatrix, (2*clip[4])/((clip[1]-clip[0])*clip[5]), (2*clip[4])/((clip[3]-clip[2])*clip[5]), 1/clip[5]);
+    //console.log("Here 4")
+    //console.log(scaleMatrix);
 
     // Final transformation by multiplying matrices through (see slide 23 of lecture 09)
-    let transform = Matrix.multiply([translationMatrix, rotationMatrix, shearMatrix, scaleMatrix]);
+    let transform = Matrix.multiply([scaleMatrix, shearMatrix, rotationMatrix, translationMatrix]);
     return transform;
 }
 

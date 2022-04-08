@@ -22,13 +22,49 @@ function init() {
     ctx = view.getContext('2d');
 
     // initial scene... feel free to change this
-    scene = {
+    origScene = {
         view: {
             type: 'perspective',
             prp: Vector3(44, 20, -16),
             srp: Vector3(20, 20, -40),
             vup: Vector3(0, 1, 0),
             clip: [-19, 5, -10, 8, 12, 100]
+        },
+        models: [
+            {
+                type: 'generic',
+                vertices: [
+                    Vector4( 0,  0, -30, 1),
+                    Vector4(20,  0, -30, 1),
+                    Vector4(20, 12, -30, 1),
+                    Vector4(10, 20, -30, 1),
+                    Vector4( 0, 12, -30, 1),
+                    Vector4( 0,  0, -60, 1),
+                    Vector4(20,  0, -60, 1),
+                    Vector4(20, 12, -60, 1),
+                    Vector4(10, 20, -60, 1),
+                    Vector4( 0, 12, -60, 1)
+                ],
+                edges: [
+                    [0, 1, 2, 3, 4, 0],
+                    [5, 6, 7, 8, 9, 5],
+                    [0, 5],
+                    [1, 6],
+                    [2, 7],
+                    [3, 8],
+                    [4, 9]
+                ],
+                matrix: new Matrix(4, 4)
+            }
+        ]
+    };
+    scene = {
+        view: {
+            type: 'perspective',
+            prp: Vector3(0, 10, -5),
+            srp: Vector3(20, 15, -40),
+            vup: Vector3(1, 1, 0),
+            clip: [-12, 6, -12, 6, 10, 100]
         },
         models: [
             {
@@ -90,9 +126,36 @@ function drawScene() {
     // TODO: implement drawing here!
     // For each model, for each edge
     //  * transform to canonical view volume // done
+    let transformView = [];
+    if (scene.view.type == "perspective") {
+        transformView = mat4x4Perspective(scene.view.prp, scene.view.srp, scene.view.vup, scene.view.clip);
+    } else if (scene.view.type == "parallel") {
+        transformView = mat4x4Parallel(scene.view.prp, scene.view.srp, scene.view.vup, scene.view.clip);
+    } else {
+        console.log("Error on scene view type");
+    }
+
     //  * clip in 3D // may need some help friday
+    let clippingView = []
+    // clipping process here! But for now, just let = transformView
+    clippingView = transformView;
+
     //  * project to 2D // done
+    let projectView = [];
+    if (scene.view.type == "perspective") {
+        projectView = Matrix.multiply([mat4x4MPer(), clippingView]);
+    } else if (scene.view.type == "parallel") {
+        projectView = Matrix.multiply([mat4x4MPar(), clippingView]);
+    } else {
+        console.log("Error on scene projection")
+    }
+
+    // Print to final projection matrix to log:
+    console.log("Projection to 2D:")
+    console.log(projectView);
+
     //  * draw line // may need some help friday
+    // drawomg process here!
 }
 
 // Get outcode for vertex (parallel view volume)

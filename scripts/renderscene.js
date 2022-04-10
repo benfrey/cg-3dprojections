@@ -105,6 +105,8 @@ function init() {
 
 // Animation loop - repeatedly calls rendering code
 function animate(timestamp) {
+    
+    ctx.clearRect(0, 0, view.width, view.height);
     // step 1: calculate time (time since start)
     let time = timestamp - start_time;
 
@@ -116,7 +118,7 @@ function animate(timestamp) {
 
     // step 4: request next animation frame (recursively calling same function)
     // (may want to leave commented out while debugging initially)
-    // window.requestAnimationFrame(animate);
+     window.requestAnimationFrame(animate);
 }
 
 // Main drawing code - use information contained in variable `scene`
@@ -173,7 +175,7 @@ function drawScene() {
 
     // Then draw lines to canvas based on edge connections defined within the scene
     for (let edgeArray of Object.entries(scene.models[0].edges)) {
-        console.log(edgeArray[1]);
+       // console.log(edgeArray[1]);
         //console.log(edgeArray[1][0]);    
 
         // Iterate thrrough the edge array until we run out of vertex indice pairs
@@ -186,7 +188,7 @@ function drawScene() {
             //console.log(projectedVertices[edgeArray[1][i+1]].x);
 
             // Drawing line from (v[e[i]].x, v[e[i]].y) to (v[e[i+1]].x, v[e[i+1]].y)
-            console.log("Drawing line from (" + projectedVertices[edgeArray[1][i]].x + " ," + projectedVertices[edgeArray[1][i]].y + ") to (" + projectedVertices[edgeArray[1][i+1]].x + " ," + projectedVertices[edgeArray[1][i+1]].y +")"); 
+           // console.log("Drawing line from (" + projectedVertices[edgeArray[1][i]].x + " ," + projectedVertices[edgeArray[1][i]].y + ") to (" + projectedVertices[edgeArray[1][i+1]].x + " ," + projectedVertices[edgeArray[1][i+1]].y +")"); 
             drawLine(projectedVertices[edgeArray[1][i]].x, projectedVertices[edgeArray[1][i]].y, projectedVertices[edgeArray[1][i+1]].x, projectedVertices[edgeArray[1][i+1]].y);
         }
     }
@@ -268,23 +270,39 @@ function clipLinePerspective(line, z_min) {
 
 // Called when user presses a key on the keyboard down
 function onKeyDown(event) {
+
+    let n = scene.view.prp.subtract(scene.view.srp);
+    n.normalize();
+    let u = scene.view.vup.cross(n);
+    u.normalize();
+
     switch (event.keyCode) {
+       
         case 37: // LEFT Arrow
+        
             console.log("left");
             break;
         case 39: // RIGHT Arrow
             console.log("right");
             break;
         case 65: // A key
+        scene.view.prp = u.add(scene.view.prp);
+        scene.view.srp = u.add(scene.view.srp);
             console.log("A");
             break;
         case 68: // D key
+        scene.view.prp = scene.view.prp.subtract(u);
+        scene.view.srp = scene.view.srp.subtract(u);
             console.log("D");
             break;
         case 83: // S key
+        scene.view.prp = n.add(scene.view.prp);
+        scene.view.srp = n.add(scene.view.srp);
             console.log("S");
             break;
         case 87: // W key
+        scene.view.prp = scene.view.prp.subtract(n);
+        scene.view.srp = scene.view.srp.subtract(n);
             console.log("W");
             break;
     }

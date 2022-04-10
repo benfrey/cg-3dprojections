@@ -41,7 +41,8 @@ function mat4x4Parallel(prp, srp, vup, clip) {
     //console.log(scaleMatrix);
     
     // Final transformation by multiplying matrices through (see slide 14 of lecture 09)
-    let transform = Matrix.multiply([translationMatrix, rotationMatrix, shearMatrix, translateClippingMatrix, scaleMatrix]);
+    //let transform = Matrix.multiply([translationMatrix, rotationMatrix, shearMatrix, translateClippingMatrix, scaleMatrix]);
+    let transform = Matrix.multiply([scaleMatrix, translateClippingMatrix, shearMatrix, rotationMatrix, translationMatrix]);
     return transform;
 }
 

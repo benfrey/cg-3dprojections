@@ -291,7 +291,7 @@ function clipLineParallel(line) {
                 let changex = (p0.x - p1.x);
                 let b = (point_one.y - ((changey/changex)*point_one.x));
                 let y = ((changey/changex)*point_one.x) + b;
-                let newPoint; //left_edge, y
+                let newPoint = [-(view.width / 2), y]; //left_edge, y - don't know if these are right
             }
             else if(i ==1){
                 //clip against right edge
@@ -299,7 +299,7 @@ function clipLineParallel(line) {
                 let changex = (p0.x - p1.x);
                 let b = (point_one.y - ((changey/changex)*point_one.x));
                 let y = ((changey/changex)*point_one.x) + b;
-                let newPoint; //right_edge, y
+                let newPoint = [view.width / 2, y]; //right_edge, y - don't know if these are right
 
             }
             else if(i ==2){
@@ -308,7 +308,7 @@ function clipLineParallel(line) {
                 let changex = (p0.x - p1.x);
                 let b = (point_one.y - ((changey/changex)*point_one.x));
                 let x = (point_one.y / (changey/changex)) - b;
-                let newPoint; //x, bottom_edge
+                let newPoint = [x, -(view.height / 2)]; //x, bottom_edge - don't know if these are right
             }
             else{
                 //clip against top edge
@@ -316,7 +316,7 @@ function clipLineParallel(line) {
                 let changex = (p0.x - p1.x);
                 let b = (point_one.y - ((changey/changex)*point_one.x));
                 let x = (point_one.y / (changey/changex)) - b;
-                let newPoint; //x, top_edge
+                let newPoint = [x, view.height / 2]; //x, top_edge - don't know if these are right
             }
 
             //replace selected endpoint with this intersection point
@@ -330,7 +330,8 @@ function clipLineParallel(line) {
                 //recalculate enpoint's outcode
                 out1 = outcodeParallel(p1);
             }
-            //result = line; //needs to be new points
+            let newLine = [p0, p1];
+            result = newLine;
 
             //try to accept/reject again (repeat process)
         }   
@@ -347,6 +348,95 @@ function clipLinePerspective(line, z_min) {
     let p1 = Vector3(line.pt1.x, line.pt1.y, line.pt1.z);
     let out0 = outcodePerspective(p0, z_min);
     let out1 = outcodePerspective(p1, z_min);
+    let repeat = 1;
+
+    // TODO: implement clipping here!
+
+    while(repeat == 1){
+        //check if both are outside, to reject
+        if((out0 | out1) != 0){
+            repeat = 0;
+            //both points are outside the line, reject by returning null
+            return result;
+        }
+        //check if both are inside, to accept
+        else if((out0 & out1 == 1)){
+            repeat = 0;
+            //both points are inside the line, accept by returning line with same endpoints
+            return line;
+        }
+        else {
+            // * everything else
+            //Select and endpoint that lies outside the view rectangle
+            if(out0 != 0000){
+                let point_one = p0;
+            }
+            else{
+                let point_one = p1;
+            }
+            //find the first bit set to 1 in the selected endpoint's outcode
+            let string_outcode = "" + point_one + "";
+            for(var i = 0; i<string_outcode.length; i++){
+                if(string_outcode.charAt(i) == "1"){
+                    let position = i;
+                    break;
+                }
+            }
+            //calculate the intersection point between the line and corresponding edge
+            if(i == 0){
+                //clip against left edge
+                let changey = (p0.y - p1.y);
+                let changex = (p0.x - p1.x);
+                let b = (point_one.y - ((changey/changex)*point_one.x));
+                let y = ((changey/changex)*point_one.x) + b;
+                let newPoint = [-(view.width / 2), y, point_one.z]; //left_edge, y - don't know if these are right
+            }
+            else if(i ==1){
+                //clip against right edge
+                let changey = (p0.y - p1.y);
+                let changex = (p0.x - p1.x);
+                let b = (point_one.y - ((changey/changex)*point_one.x));
+                let y = ((changey/changex)*point_one.x) + b;
+                let newPoint = [view.width / 2, y, point_one.z]; //right_edge, y - don't know if these are right
+
+            }
+            else if(i ==2){
+                //clip against bottom edge
+                let changey = (p0.y - p1.y);
+                let changex = (p0.x - p1.x);
+                let b = (point_one.y - ((changey/changex)*point_one.x));
+                let x = (point_one.y / (changey/changex)) - b;
+                let newPoint = [x, -(view.height / 2), point_one.z]; //x, bottom_edge - don't know if these are right
+            }
+            else{
+                //clip against top edge
+                let changey = (p0.y - p1.y);
+                let changex = (p0.x - p1.x);
+                let b = (point_one.y - ((changey/changex)*point_one.x));
+                let x = (point_one.y / (changey/changex)) - b;
+                let newPoint = [x, view.height / 2, point_one.z]; //x, top_edge - don't know if these are right
+            }
+
+            //replace selected endpoint with this intersection point
+            if(point_one === p0){
+                p0 = newPoint;
+                //recalculate enpoint's outcode
+                out0 = outcodePerspective(p0, z_min);
+            }
+            else{
+                p1 = newPoint;
+                //recalculate enpoint's outcode
+                out1 = outcodePerspective(p1, z_min);
+            }
+            let newLine = [p0, p1];
+            result = newLine;
+
+            //try to accept/reject again (repeat process)
+        }   
+
+    }
+
+    return result;
 
     // TODO: implement clipping here!
 

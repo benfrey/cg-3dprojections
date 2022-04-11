@@ -110,6 +110,7 @@ function animate(timestamp) {
     // step 1: calculate time (time since start)
     let time = timestamp - start_time;
 
+    //For animating by time, it’s probably easiest to explain with an example. Say that I want to have my model take 2 seconds to rotate once. Given a typical monitor with a 60 Hz refresh rate, this would mean incrementing the rotation angle by 3 degrees each frame (360 degrees / 120 frames in 2 seconds). However, if we made this assumption, then someone using a monitor with a faster or slower refresh rate would see the animation going much faster or slower than desired. Therefore, you should calculate how much to rotate the model based on how much time has passed. If someone has a faster refresh rate on their monitor, then less time would have passed since the previous frame and we should not rotate quite as much.
     // step 2: transform models based on time
     // TODO: implement this! // may need some help friday
 
@@ -249,8 +250,92 @@ function clipLineParallel(line) {
     let p1 = Vector3(line.pt1.x, line.pt1.y, line.pt1.z);
     let out0 = outcodeParallel(p0);
     let out1 = outcodeParallel(p1);
+    let repeat = 1;
 
     // TODO: implement clipping here!
+
+    while(repeat == 1){
+        //check if both are outside, to reject
+        if((out0 | out1) != 0){
+            repeat = 0;
+            //both points are outside the line, reject by returning null
+            return result;
+        }
+        //check if both are inside, to accept
+        else if((out0 & out1 == 1)){
+            repeat = 0;
+            //both points are inside the line, accept by returning line with same endpoints
+            return line;
+        }
+        else {
+            // * everything else
+            //Select and endpoint that lies outside the view rectangle
+            if(out0 != 0000){
+                let point_one = p0;
+            }
+            else{
+                let point_one = p1;
+            }
+            //find the first bit set to 1 in the selected endpoint's outcode
+            let string_outcode = "" + point_one + "";
+            for(var i = 0; i<string_outcode.length; i++){
+                if(string_outcode.charAt(i) == "1"){
+                    let position = i;
+                    break;
+                }
+            }
+            //calculate the intersection point between the line and corresponding edge
+            if(i == 0){
+                //clip against left edge
+                let changey = (p0.y - p1.y);
+                let changex = (p0.x - p1.x);
+                let b = (point_one.y - ((changey/changex)*point_one.x));
+                let y = ((changey/changex)*point_one.x) + b;
+                let newPoint; //left_edge, y
+            }
+            else if(i ==1){
+                //clip against right edge
+                let changey = (p0.y - p1.y);
+                let changex = (p0.x - p1.x);
+                let b = (point_one.y - ((changey/changex)*point_one.x));
+                let y = ((changey/changex)*point_one.x) + b;
+                let newPoint; //right_edge, y
+
+            }
+            else if(i ==2){
+                //clip against bottom edge
+                let changey = (p0.y - p1.y);
+                let changex = (p0.x - p1.x);
+                let b = (point_one.y - ((changey/changex)*point_one.x));
+                let x = (point_one.y / (changey/changex)) - b;
+                let newPoint; //x, bottom_edge
+            }
+            else{
+                //clip against top edge
+                let changey = (p0.y - p1.y);
+                let changex = (p0.x - p1.x);
+                let b = (point_one.y - ((changey/changex)*point_one.x));
+                let x = (point_one.y / (changey/changex)) - b;
+                let newPoint; //x, top_edge
+            }
+
+            //replace selected endpoint with this intersection point
+            if(point_one === p0){
+                p0 = newPoint;
+                //recalculate enpoint's outcode
+                out0 = outcodeParallel(p0);
+            }
+            else{
+                p1 = newPoint;
+                //recalculate enpoint's outcode
+                out1 = outcodeParallel(p1);
+            }
+            //result = line; //needs to be new points
+
+            //try to accept/reject again (repeat process)
+        }   
+
+    }
 
     return result;
 }

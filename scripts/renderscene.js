@@ -119,7 +119,7 @@ function animate(timestamp) {
 
     // step 4: request next animation frame (recursively calling same function)
     // (may want to leave commented out while debugging initially)
-     window.requestAnimationFrame(animate);
+   //  window.requestAnimationFrame(animate);
 }
 
 // Main drawing code - use information contained in variable `scene`
@@ -175,7 +175,7 @@ function drawScene() {
     //console.log(projectedVertices);
 
     // Then draw lines to canvas based on edge connections defined within the scene
-    for (let edgeArray of Object.entries(scene.models[0].edges)) {
+    for (let edgeArray of scene.models[0].edges) {
        // console.log(edgeArray[1]);
         //console.log(edgeArray[1][0]);    
 
@@ -183,14 +183,20 @@ function drawScene() {
         // Note: Dr. Marrinan already returnes to original vertex index 
         // for closed loops (we start at vertex v and end at v), thus we only 
         // go through length-1    
-        for (let i = 0; i < (edgeArray[1].length)-1; i++) {
+        for (let i = 0; i < edgeArray.length-1; i++) {
+            vert_one = Vector4(projectedVertices[edgeArray[i]].x, projectedVertices[edgeArray[i]].y, projectedVertices[edgeArray[i]].z, projectedVertices[edgeArray[i]].w);
+            vert_two = Vector4(projectedVertices[edgeArray[i+1]].x, projectedVertices[edgeArray[i+1]].y, projectedVertices[edgeArray[i+1]].z, projectedVertices[edgeArray[i+1]].w);
+            vert_one.x = vert_one.x/vert_one.w;
+            vert_one.y = vert_one.y/vert_one.w;
+            vert_two.x = vert_two.x/vert_two.w;
+            vert_two.y = vert_two.y/vert_two.w;
             // Test indexing
             //console.log(projectedVertices[edgeArray[1][i]].x);
             //console.log(projectedVertices[edgeArray[1][i+1]].x);
 
             // Drawing line from (v[e[i]].x, v[e[i]].y) to (v[e[i+1]].x, v[e[i+1]].y)
-           // console.log("Drawing line from (" + projectedVertices[edgeArray[1][i]].x + " ," + projectedVertices[edgeArray[1][i]].y + ") to (" + projectedVertices[edgeArray[1][i+1]].x + " ," + projectedVertices[edgeArray[1][i+1]].y +")"); 
-            drawLine(projectedVertices[edgeArray[1][i]].x, projectedVertices[edgeArray[1][i]].y, projectedVertices[edgeArray[1][i+1]].x, projectedVertices[edgeArray[1][i+1]].y);
+           //console.log("Drawing line from (" + projectedVertices[edgeArray[1][i]].x + " ," + projectedVertices[edgeArray[1][i]].y + ") to (" + projectedVertices[edgeArray[1][i+1]].x + " ," + projectedVertices[edgeArray[1][i+1]].y +")"); 
+            drawLine(vert_one.x, vert_one.y, vert_two.x, vert_two.y);
         }//divide by w
     }
 }
@@ -294,34 +300,53 @@ function clipLineParallel(line) {
                 //clip against left edge
                 let changey = (point_one.y - point_zero.y);
                 let changex = (point_one.x - point_zero.x);
-                let b = (point_one.y - ((changey/changex)*point_one.x));
+                let changez= (point_one.z - point_zero.z);
+            
+                let x = (1-left_t)*point_zero.x+(left_t*point_one.x);
+                let y = (1-left_t)*point_zero.y+(left_t*point_one.y);
+                let z = (1-left_t)*point_zero.z+(left_t*point_one.z);
+                let left_t = (-point_zero.x+point_zero.z)/(changex- changez);
+                
                 //no b or y use equations from slides last slide 3D clipping powerpoint
-                let y = ((changey/changex)*point_one.x) + b;
+                //let y = ((changey/changex)*point_one.x) + b;
                 let newPoint = [-(view.width / 2), y]; //left_edge, y - don't know if these are right
             }
             else if(position ==1){
                 //clip against right edge
-                let changey = (p0.y - p1.y);
-                let changex = (p0.x - p1.x);
-                let b = (point_one.y - ((changey/changex)*point_one.x));
-                let y = ((changey/changex)*point_one.x) + b;
+                let changey = (point_one.y - point_zero.y);
+                let changex = (point_one.x - point_zero.x);
+                let changez= (point_one.z - point_zero.z);
+                
+                let x = (1-left_t)*point_zero.x+(left_t*point_one.x);
+                let y = (1-left_t)*point_zero.y+(left_t*point_one.y);
+                let z = (1-left_t)*point_zero.z+(left_t*point_one.z);
+                let left_t = (point_zero.x+point_zero.z)/(changex- changez);
+                 
                 let newPoint = [view.width / 2, y]; //right_edge, y - don't know if these are right
 
             }
             else if(position ==2){
                 //clip against bottom edge
-                let changey = (p0.y - p1.y);
-                let changex = (p0.x - p1.x);
-                let b = (point_one.y - ((changey/changex)*point_one.x));
-                let x = (point_one.y / (changey/changex)) - b;
+                let changey = (point_one.y - point_zero.y);
+                let changex = (point_one.x - point_zero.x);
+                let changez= (point_one.z - point_zero.z);
+                
+                let x = (1-left_t)*point_zero.x+(left_t*point_one.x);
+                let y = (1-left_t)*point_zero.y+(left_t*point_one.y);
+                let z = (1-left_t)*point_zero.z+(left_t*point_one.z);
+                let left_t = (-point_zero.y+point_zero.z)/(changey - changez);
                 let newPoint = [x, -(view.height / 2)]; //x, bottom_edge - don't know if these are right
             }
             else{
                 //clip against top edge
-                let changey = (p0.y - p1.y);
-                let changex = (p0.x - p1.x);
-                let b = (point_one.y - ((changey/changex)*point_one.x));
-                let x = (point_one.y / (changey/changex)) - b;
+                let changey = (point_one.y - point_zero.y);
+                let changex = (point_one.x - point_zero.x);
+                let changez= (point_one.z - point_zero.z);
+               
+                let x = (1-left_t)*point_zero.x+(left_t*point_one.x);
+                let y = (1-left_t)*point_zero.y+(left_t*point_one.y);
+                let z = (1-left_t)*point_zero.z+(left_t*point_one.z);
+                let left_t = (point_zero.y+point_zero.z)/(-changey - changez);
                 let newPoint = [x, view.height / 2]; //x, top_edge - don't know if these are right
             }
             //add neart and far
@@ -360,13 +385,13 @@ function clipLinePerspective(line, z_min) {
 
     while(repeat == 1){
         //check if both are outside, to reject
-        if((out0 | out1) != 0){
+        if((out0 & out1) != 0){
             repeat = 0;
             //both points are outside the line, reject by returning null
             return result;
         }
         //check if both are inside, to accept
-        else if((out0 & out1 == 1)){
+        else if((out0 | out1 == 0)){
             repeat = 0;
             //both points are inside the line, accept by returning line with same endpoints
             return line;
@@ -374,6 +399,7 @@ function clipLinePerspective(line, z_min) {
         else {
             // * everything else
             //Select and endpoint that lies outside the view rectangle
+            let point_one,point_zero;
             if(out0 != 0000){
                 let point_one = p0;
             }
@@ -391,35 +417,50 @@ function clipLinePerspective(line, z_min) {
             //calculate the intersection point between the line and corresponding edge
             if(i == 0){
                 //clip against left edge
-                let changey = (p0.y - p1.y);
-                let changex = (p0.x - p1.x);
-                let b = (point_one.y - ((changey/changex)*point_one.x));
-                let y = ((changey/changex)*point_one.x) + b;
-                let newPoint = [-(view.width / 2), y, point_one.z]; //left_edge, y - don't know if these are right
+                let changey = (point_one.y - point_zero.y);
+                let changex = (point_one.x - point_zero.x);
+                let changez= (point_one.z - point_zero.z);
+              
+                let x = (1-left_t)*point_zero.x+(left_t*point_one.x);
+                let y = (1-left_t)*point_zero.y+(left_t*point_one.y);
+                let z = (1-left_t)*point_zero.z+(left_t*point_one.z);
+                let newPoint = [x,y,z]; //left_edge, y - don't know if these are right
             }
             else if(i ==1){
                 //clip against right edge
-                let changey = (p0.y - p1.y);
-                let changex = (p0.x - p1.x);
-                let b = (point_one.y - ((changey/changex)*point_one.x));
-                let y = ((changey/changex)*point_one.x) + b;
+                let changey = (point_one.y - point_zero.y);
+                let changex = (point_one.x - point_zero.x);
+                let changez= (point_one.z - point_zero.z);
+               
+                let x = (1-left_t)*point_zero.x+(left_t*point_one.x);
+                let y = (1-left_t)*point_zero.y+(left_t*point_one.y);
+                let z = (1-left_t)*point_zero.z+(left_t*point_one.z);
+                let left_t = (point_zero.x+point_zero.z)/(changex - changez);
                 let newPoint = [view.width / 2, y, point_one.z]; //right_edge, y - don't know if these are right
 
             }
             else if(i ==2){
                 //clip against bottom edge
-                let changey = (p0.y - p1.y);
-                let changex = (p0.x - p1.x);
-                let b = (point_one.y - ((changey/changex)*point_one.x));
-                let x = (point_one.y / (changey/changex)) - b;
+                let changey = (point_one.y - point_zero.y);
+                let changex = (point_one.x - point_zero.x);
+                let changez= (point_one.z - point_zero.z);
+                
+                let x = (1-left_t)*point_zero.x+(left_t*point_one.x);
+                let y = (1-left_t)*point_zero.y+(left_t*point_one.y);
+                let z = (1-left_t)*point_zero.z+(left_t*point_one.z);
+                let left_t = (-point_zero.y+point_zero.z)/(changey - changez);
                 let newPoint = [x, -(view.height / 2), point_one.z]; //x, bottom_edge - don't know if these are right
             }
             else{
                 //clip against top edge
-                let changey = (p0.y - p1.y);
-                let changex = (p0.x - p1.x);
-                let b = (point_one.y - ((changey/changex)*point_one.x));
-                let x = (point_one.y / (changey/changex)) - b;
+                let changey = (point_one.y - point_zero.y);
+                let changex = (point_one.x - point_zero.x);
+                let changez= (point_one.z - point_zero.z);
+         
+                let x = (1-left_t)*point_zero.x+(left_t*point_one.x);
+                let y = (1-left_t)*point_zero.y+(left_t*point_one.y);
+                let z = (1-left_t)*point_zero.z+(left_t*point_one.z);
+                let left_t = (point_zero.y+point_zero.z)/(-changey - changez);
                 let newPoint = [x, view.height / 2, point_one.z]; //x, top_edge - don't know if these are right
             }
 

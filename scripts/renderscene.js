@@ -105,7 +105,7 @@ function init() {
 
 // Animation loop - repeatedly calls rendering code
 function animate(timestamp) {
-    
+
     ctx.clearRect(0, 0, view.width, view.height);
     // step 1: calculate time (time since start)
     let time = timestamp - start_time;
@@ -156,40 +156,43 @@ function drawScene() {
     // Print to projection matrix to 2D to log:
     //console.log("Projection to 2D:")
     //console.log(projectView);
-    
+
     // * project to window view volume
     let windowView = new Matrix(4, 4);
     mat4x4WindowProjection(windowView, view.width, view.height);
     windowView = Matrix.multiply([windowView, projectView]);
 
     // * draw line - multiply projectView by scene vertices and draw to canvas
-    
-    // First create a copy of the scene vertices so that we can project them
+
+    // First create a copy of the scene vertices so that we can project them and divide by w
     let projectedVertices = Object.assign({}, scene.models[0].vertices);
     for (let i = 0; i < Object.entries(projectedVertices).length; i++) {
         //console.log(projectedVertices[i]);
-        
+
         // Vertex projection - we select index i because we grab the value of the object, not the key
         projectedVertices[i] = Matrix.multiply([windowView, projectedVertices[i]]);
+
+        // Divide each vector component by w
+        vec4x1NonHomogeneous(projectedVertices[i]);
     }
     //console.log(projectedVertices);
 
     // Then draw lines to canvas based on edge connections defined within the scene
     for (let edgeArray of Object.entries(scene.models[0].edges)) {
        // console.log(edgeArray[1]);
-        //console.log(edgeArray[1][0]);    
+        //console.log(edgeArray[1][0]);
 
         // Iterate thrrough the edge array until we run out of vertex indice pairs
-        // Note: Dr. Marrinan already returnes to original vertex index 
-        // for closed loops (we start at vertex v and end at v), thus we only 
-        // go through length-1    
+        // Note: Dr. Marrinan already returnes to original vertex index
+        // for closed loops (we start at vertex v and end at v), thus we only
+        // go through length-1
         for (let i = 0; i < (edgeArray[1].length)-1; i++) {
             // Test indexing
             //console.log(projectedVertices[edgeArray[1][i]].x);
             //console.log(projectedVertices[edgeArray[1][i+1]].x);
 
             // Drawing line from (v[e[i]].x, v[e[i]].y) to (v[e[i+1]].x, v[e[i+1]].y)
-           // console.log("Drawing line from (" + projectedVertices[edgeArray[1][i]].x + " ," + projectedVertices[edgeArray[1][i]].y + ") to (" + projectedVertices[edgeArray[1][i+1]].x + " ," + projectedVertices[edgeArray[1][i+1]].y +")"); 
+           // console.log("Drawing line from (" + projectedVertices[edgeArray[1][i]].x + " ," + projectedVertices[edgeArray[1][i]].y + ") to (" + projectedVertices[edgeArray[1][i+1]].x + " ," + projectedVertices[edgeArray[1][i+1]].y +")");
             drawLine(projectedVertices[edgeArray[1][i]].x, projectedVertices[edgeArray[1][i]].y, projectedVertices[edgeArray[1][i+1]].x, projectedVertices[edgeArray[1][i+1]].y);
         }//divide by w
     }
@@ -283,7 +286,7 @@ function clipLineParallel(line) {
             let string_outcode = "" + point_one + "";
             let position =0;
             for(var i = 0; i<string_outcode.length; i++){
-            
+
                 if(string_outcode.charAt(i) == "1"){
                      position = i;
                     break;
@@ -340,7 +343,7 @@ function clipLineParallel(line) {
             result = newLine;
 
             //try to accept/reject again (repeat process)
-        }   
+        }
 
     }
 
@@ -438,7 +441,7 @@ function clipLinePerspective(line, z_min) {
             result = newLine;
 
             //try to accept/reject again (repeat process)
-        }   
+        }
 
     }
 
@@ -458,9 +461,9 @@ function onKeyDown(event) {
     u.normalize();
 
     switch (event.keyCode) {
-       
+
         case 37: // LEFT Arrow
-        
+
             console.log("left");
             break;
         case 39: // RIGHT Arrow

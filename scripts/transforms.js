@@ -39,7 +39,7 @@ function mat4x4Parallel(prp, srp, vup, clip) {
     mat4x4Scale(scaleMatrix,2/(clip[1]-clip[0]),2/(clip[3]-clip[2]),1/clip[4]);
     //console.log("Here 5")
     //console.log(scaleMatrix);
-    
+
     // Final transformation by multiplying matrices through (see slide 14 of lecture 09)
     //let transform = Matrix.multiply([translationMatrix, rotationMatrix, shearMatrix, translateClippingMatrix, scaleMatrix]);
     let transform = Matrix.multiply([scaleMatrix, translateClippingMatrix, shearMatrix, rotationMatrix, translationMatrix]);
@@ -181,6 +181,11 @@ function mat4x4WindowProjection(mat4x4, width, height) {
                      [0, height/2, 0, height/2],
                      [0, 0, 1, 0],
                      [0, 0, 0, 1]];
+}
+
+// set values of existing 4x4 matrix to return to non-homogenous coordinate system (divide by w)
+function vec4x1NonHomogeneous(vec4) {
+    vec4.values = [vec4.x/vec4.w, vec4.y/vec4.w, vec4.z/vec4.w, vec4.w];
 }
 
 // create a new 3-component vector with values x,y,z

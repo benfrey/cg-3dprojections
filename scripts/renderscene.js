@@ -119,12 +119,12 @@ function animate(timestamp) {
 
     // step 4: request next animation frame (recursively calling same function)
     // (may want to leave commented out while debugging initially)
-     window.requestAnimationFrame(animate);
+    //window.requestAnimationFrame(animate);
 }
 
 // Main drawing code - use information contained in variable `scene`
 function drawScene() {
-    console.log(scene);
+    //console.log(scene);
 
     // TODO: implement drawing here!
     // For each model, for each edge
@@ -157,6 +157,11 @@ function drawScene() {
     //console.log("Projection to 2D:")
     //console.log(projectView);
     
+    /* Return to non- Homogeneous coordinates
+    let nonHomogeneous = new Matrix(4, 4);
+    mat4x4NonHomogeneous(projectView);
+    */
+
     // * project to window view volume
     let windowView = new Matrix(4, 4);
     mat4x4WindowProjection(windowView, view.width, view.height);
@@ -164,15 +169,18 @@ function drawScene() {
 
     // * draw line - multiply projectView by scene vertices and draw to canvas
     
-    // First create a copy of the scene vertices so that we can project them
+    // First create a copy of the scene vertices so that we can project them and divide by w
     let projectedVertices = Object.assign({}, scene.models[0].vertices);
     for (let i = 0; i < Object.entries(projectedVertices).length; i++) {
         //console.log(projectedVertices[i]);
         
         // Vertex projection - we select index i because we grab the value of the object, not the key
         projectedVertices[i] = Matrix.multiply([windowView, projectedVertices[i]]);
+
+        // Divide each vector component by w
+        vec4x1NonHomogeneous(projectedVertices[i]);
     }
-    //console.log(projectedVertices);
+    console.log(projectedVertices);
 
     // Then draw lines to canvas based on edge connections defined within the scene
     for (let edgeArray of Object.entries(scene.models[0].edges)) {
@@ -460,10 +468,11 @@ function onKeyDown(event) {
     switch (event.keyCode) {
        
         case 37: // LEFT Arrow
-        
+            // rotation animaiton here rotate SRP around the v-axis with the PRP as the origin
             console.log("left");
             break;
         case 39: // RIGHT Arrow
+            // rotation animaiton here rotate SRP around the v-axis with the PRP as the origin
             console.log("right");
             break;
         case 65: // A key

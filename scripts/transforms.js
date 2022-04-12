@@ -183,6 +183,11 @@ function mat4x4WindowProjection(mat4x4, width, height) {
                      [0, 0, 0, 1]];
 }
 
+// set values of existing 4x4 matrix to return to non-homogenous coordinate system (divide by w)
+function vec4x1NonHomogeneous(vec4) {
+    vec4.values = [vec4.x/vec4.w, vec4.y/vec4.w, vec4.z/vec4.w, vec4.w];
+}
+
 // create a new 3-component vector with values x,y,z
 function Vector3(x, y, z) {
     let vec3 = new Vector(3);

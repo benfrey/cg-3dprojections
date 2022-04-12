@@ -129,7 +129,8 @@ function drawScene() {
     // TODO: implement drawing here!
     // For each model, for each edge
     //  * transform to canonical view volume // done
-    let transformView = [];
+    //matries creating
+    let transformView;
     if (scene.view.type == "perspective") {
         transformView = mat4x4Perspective(scene.view.prp, scene.view.srp, scene.view.vup, scene.view.clip);
     } else if (scene.view.type == "parallel") {
@@ -138,27 +139,55 @@ function drawScene() {
         console.log("Error on scene view type");
     }
 
-    //  * clip in 3D // may need some help friday
-    let clippingView = [];
-    // clipping process here! But for now, just let = transformView
-    clippingView = transformView;
-
     //  * project to 2D // done
-    let projectView = [];
+    let projectView;
+    let windowView = new Matrix(4, 4);
+    mat4x4WindowProjection(windowView, view.width, view.height); 
     if (scene.view.type == "perspective") {
-        projectView = Matrix.multiply([mat4x4MPer(), clippingView]);
+        projectView = Matrix.multiply([windowView,mat4x4MPer() ]);
     } else if (scene.view.type == "parallel") {
-        projectView = Matrix.multiply([mat4x4MPar(), clippingView]);
+        projectView = Matrix.multiply([windowView,mat4x4MPar()]);
     } else {
         console.log("Error on scene projection")
     }
+    //Step 1 transform all verts into the connical view volume
+    let transform_vert = [];
+    for(let i=0;i<scene.models[0].vertices.length;++i){
+        // new list stores vertex locations within the connical view 
+        transform_vert.push(Matrix.multiply([transformView,scene.models[0].vertices[i]]));
+        
+    }
+    //Step 2 clip all lines against the connonical view volume
 
+
+    //Step 3 project clipped lines into 2D and scale to match screen coordinates 
+    for (let i=0;i<scene.models[0].edges.length;++i){
+        let edge = scene.models[0].edges[i];
+        for (let j = 0; j <edge.length-1; ++j){
+            let index_zero = edge[j];
+            let index_one = edge[j+1];
+            let vertex_zero = transform_vert[index_zero];
+            let vertex_one = transform_vert[index_one];
+            //clipping start
+            let lines = {pt0:vertex_zero,pt1:vertex_one};
+            let clipped_lines = clipLinePerspective(lines,-scene.view.clip[4]/scene.view.clip[5]);
+            if(clipped_lines != null){
+                let project_vertZero = Matrix.multiply([projectView,clipped_lines.pt0]);
+                let project_vertOne = Matrix.multiply([projectView,clipped_lines.pt1]);
+            
+                vec4x1NonHomogeneous(project_vertZero);
+                vec4x1NonHomogeneous(project_vertOne);
+                drawLine(project_vertZero.x,project_vertZero.y,project_vertOne.x,project_vertOne.y);
+            }
+
+        }
+    }
     // Print to projection matrix to 2D to log:
     //console.log("Projection to 2D:")
     //console.log(projectView);
 
     // * project to window view volume
-    let windowView = new Matrix(4, 4);
+   /* let windowView = new Matrix(4, 4);
     mat4x4WindowProjection(windowView, view.width, view.height);
     windowView = Matrix.multiply([windowView, projectView]);
 
@@ -194,8 +223,8 @@ function drawScene() {
             // Drawing line from (v[e[i]].x, v[e[i]].y) to (v[e[i+1]].x, v[e[i+1]].y)
            // console.log("Drawing line from (" + projectedVertices[edgeArray[1][i]].x + " ," + projectedVertices[edgeArray[1][i]].y + ") to (" + projectedVertices[edgeArray[1][i+1]].x + " ," + projectedVertices[edgeArray[1][i+1]].y +")");
             drawLine(projectedVertices[edgeArray[1][i]].x, projectedVertices[edgeArray[1][i]].y, projectedVertices[edgeArray[1][i+1]].x, projectedVertices[edgeArray[1][i+1]].y);
-        }//divide by w
-    }
+        }//divide by w 
+    } */
 }
 
 // Get outcode for vertex (parallel view volume)
@@ -248,11 +277,12 @@ function outcodePerspective(vertex, z_min) {
 
 // Clip line - should either return a new line (with two endpoints inside view volume) or null (if line is completely outside view volume)
 function clipLineParallel(line) {
+
     let result = null;
-    let p0 = Vector3(line.pt0.x, line.pt0.y, line.pt0.z);
-    let p1 = Vector3(line.pt1.x, line.pt1.y, line.pt1.z);
-    let out0 = outcodeParallel(p0);
-    let out1 = outcodeParallel(p1);
+    let p0 = Vector4(line.pt0.x, line.pt0.y, line.pt0.z,line.pt0.w);
+    let p1 = Vector4(line.pt1.x, line.pt1.y, line.pt1.z,line.pt1.w);
+    let out0 = outcodePerspective(p0, z_min);
+    let out1 = outcodePerspective(p1, z_min);
     let repeat = 1;
 
     // TODO: implement clipping here!
@@ -293,22 +323,21 @@ function clipLineParallel(line) {
                 }
             }
             //calculate the intersection point between the line and corresponding edge
+            let delta_x =  (p1.x - p0.x);
+            let delta_y = ( p1.y - p0.y);
+            let delta_z = ( p1.z - p0.z);
+            let t;
+
             if(position == 0){
                 //clip against left edge
-                let changey = (point_one.y - point_zero.y);
-                let changex = (point_one.x - point_zero.x);
-                let b = (point_one.y - ((changey/changex)*point_one.x));
-                //no b or y use equations from slides last slide 3D clipping powerpoint
-                let y = ((changey/changex)*point_one.x) + b;
-                let newPoint = [-(view.width / 2), y]; //left_edge, y - don't know if these are right
+
+               t = (-p0.x + p0.z)/(delta_x-delta_z);
+
+                
             }
             else if(position ==1){
                 //clip against right edge
-                let changey = (p0.y - p1.y);
-                let changex = (p0.x - p1.x);
-                let b = (point_one.y - ((changey/changex)*point_one.x));
-                let y = ((changey/changex)*point_one.x) + b;
-                let newPoint = [view.width / 2, y]; //right_edge, y - don't know if these are right
+                
 
             }
             else if(position ==2){
@@ -319,28 +348,33 @@ function clipLineParallel(line) {
                 let x = (point_one.y / (changey/changex)) - b;
                 let newPoint = [x, -(view.height / 2)]; //x, bottom_edge - don't know if these are right
             }
-            else{
+            else if(position == 3){
                 //clip against top edge
                 let changey = (p0.y - p1.y);
                 let changex = (p0.x - p1.x);
+        
                 let b = (point_one.y - ((changey/changex)*point_one.x));
                 let x = (point_one.y / (changey/changex)) - b;
                 let newPoint = [x, view.height / 2]; //x, top_edge - don't know if these are right
             }
+            let new_pointx = (1-t)*p0.x+t*p1.x;
+            let new_pointy = (1-t)*p0.y+t*p1.y;
+            let new_pointz = (1-t)*p0.z+t*p1.z;
+            let new_point = Vector4(new_pointx,new_pointy,new_pointz,1);
             //add neart and far
             //replace selected endpoint with this intersection point
             if(point_one === p0){
-                p0 = newPoint;
+                p0 = new_point;
                 //recalculate enpoint's outcode
-                out0 = outcodeParallel(p0);
+                out0 = outcodePerspective(p0);
             }
             else{
-                p1 = newPoint;
+                p1 = new_point;
                 //recalculate enpoint's outcode
-                out1 = outcodeParallel(p1);
+                out1 = outcodePerspective(p1);
             }
-            let newLine = [p0, p1];
-            result = newLine;
+            
+        
 
             //try to accept/reject again (repeat process)
         }
@@ -352,9 +386,10 @@ function clipLineParallel(line) {
 
 // Clip line - should either return a new line (with two endpoints inside view volume) or null (if line is completely outside view volume)
 function clipLinePerspective(line, z_min) {
+
     let result = null;
-    let p0 = Vector3(line.pt0.x, line.pt0.y, line.pt0.z);
-    let p1 = Vector3(line.pt1.x, line.pt1.y, line.pt1.z);
+    let p0 = Vector4(line.pt0.x, line.pt0.y, line.pt0.z,line.pt0.w);
+    let p1 = Vector4(line.pt1.x, line.pt1.y, line.pt1.z,line.pt1.w);
     let out0 = outcodePerspective(p0, z_min);
     let out1 = outcodePerspective(p1, z_min);
     let repeat = 1;
@@ -363,16 +398,16 @@ function clipLinePerspective(line, z_min) {
 
     while(repeat == 1){
         //check if both are outside, to reject
-        if((out0 | out1) != 0){
+        if((out0 & out1) != 0){
             repeat = 0;
             //both points are outside the line, reject by returning null
             return result;
         }
         //check if both are inside, to accept
-        else if((out0 & out1 == 1)){
+        else if((out0 | out1 == 0)){
             repeat = 0;
             //both points are inside the line, accept by returning line with same endpoints
-            return line;
+            return {pt0:p0,pt1:p1};
         }
         else {
             // * everything else
@@ -391,64 +426,72 @@ function clipLinePerspective(line, z_min) {
                     break;
                 }
             }
+
+            let delta_x =  (p1.x - p0.x);
+            let delta_y = ( p1.y - p0.y);
+            let delta_z = ( p1.z - p0.z);
+            let t;
             //calculate the intersection point between the line and corresponding edge
             if(i == 0){
+
+                t = (-p0.x + p0.z)/(delta_x-delta_z);
+
                 //clip against left edge
-                let changey = (p0.y - p1.y);
+               /* let changey = (p0.y - p1.y);
                 let changex = (p0.x - p1.x);
                 let b = (point_one.y - ((changey/changex)*point_one.x));
                 let y = ((changey/changex)*point_one.x) + b;
-                let newPoint = [-(view.width / 2), y, point_one.z]; //left_edge, y - don't know if these are right
+                let newPoint = [-(view.width / 2), y, point_one.z]; //left_edge, y - don't know if these are right */
             }
             else if(i ==1){
                 //clip against right edge
-                let changey = (p0.y - p1.y);
+                /*let changey = (p0.y - p1.y);
                 let changex = (p0.x - p1.x);
                 let b = (point_one.y - ((changey/changex)*point_one.x));
                 let y = ((changey/changex)*point_one.x) + b;
-                let newPoint = [view.width / 2, y, point_one.z]; //right_edge, y - don't know if these are right
+                let newPoint = [view.width / 2, y, point_one.z]; //right_edge, y - don't know if these are right*/
 
             }
             else if(i ==2){
                 //clip against bottom edge
-                let changey = (p0.y - p1.y);
+                /*let changey = (p0.y - p1.y);
                 let changex = (p0.x - p1.x);
                 let b = (point_one.y - ((changey/changex)*point_one.x));
                 let x = (point_one.y / (changey/changex)) - b;
-                let newPoint = [x, -(view.height / 2), point_one.z]; //x, bottom_edge - don't know if these are right
+                let newPoint = [x, -(view.height / 2), point_one.z]; //x, bottom_edge - don't know if these are right*/
             }
-            else{
+            else if (i==3){
                 //clip against top edge
-                let changey = (p0.y - p1.y);
+               /* let changey = (p0.y - p1.y);
                 let changex = (p0.x - p1.x);
                 let b = (point_one.y - ((changey/changex)*point_one.x));
                 let x = (point_one.y / (changey/changex)) - b;
-                let newPoint = [x, view.height / 2, point_one.z]; //x, top_edge - don't know if these are right
+                let newPoint = [x, view.height / 2, point_one.z]; //x, top_edge - don't know if these are right*/
+            }else if(i ==4){
+
+            }else if(i==5){
+                
             }
 
             //replace selected endpoint with this intersection point
+            let new_pointx = (1-t)*p0.x+t*p1.x;
+            let new_pointy = (1-t)*p0.y+t*p1.y;
+            let new_pointz = (1-t)*p0.z+t*p1.z;
+            let new_point = Vector4(new_pointx,new_pointy,new_pointz,1);
+            //add neart and far
+            //replace selected endpoint with this intersection point
             if(point_one === p0){
-                p0 = newPoint;
+                p0 = new_point;
                 //recalculate enpoint's outcode
-                out0 = outcodePerspective(p0, z_min);
+                out0 = outcodePerspective(p0);
             }
             else{
-                p1 = newPoint;
+                p1 = new_point;
                 //recalculate enpoint's outcode
-                out1 = outcodePerspective(p1, z_min);
+                out1 = outcodePerspective(p1);
             }
-            let newLine = [p0, p1];
-            result = newLine;
-
-            //try to accept/reject again (repeat process)
-        }
 
     }
-
-    return result;
-
-    // TODO: implement clipping here!
-
     return result;
 }
 

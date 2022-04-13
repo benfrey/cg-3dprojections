@@ -113,18 +113,53 @@ function animate(timestamp) {
     // step 1: calculate time (time since start)
     let time = timestamp - start_time;
 
-    //For animating by time, it’s probably easiest to explain with an example. Say that I want to have my model take 2 seconds to rotate once. Given a typical monitor with a 60 Hz refresh rate, this would mean incrementing the rotation angle by 3 degrees each frame (360 degrees / 120 frames in 2 seconds). However, if we made this assumption, then someone using a monitor with a faster or slower refresh rate would see the animation going much faster or slower than desired. Therefore, you should calculate how much to rotate the model based on how much time has passed. If someone has a faster refresh rate on their monitor, then less time would have passed since the previous frame and we should not rotate quite as much.
+    //For animating by time, it’s probably easiest to explain with an example. Say that I want to have my model take 2 seconds to rotate once. 
+    // Given a typical monitor with a 60 Hz refresh rate, this would mean incrementing the rotation angle by 3 degrees each frame (360 degrees / 120 frames in 2 seconds). 
+    // However, if we made this assumption, then someone using a monitor with a faster or slower refresh rate would see the animation going much faster or slower than desired. 
+    // Therefore, you should calculate how much to rotate the model based on how much time has passed. 
+    // If someone has a faster refresh rate on their monitor, then less time would have passed since the previous frame and we should not rotate quite as much.
     // step 2: transform models based on time
+    
+    // We will need to find a theta based on the rps of a model and the current time
+    //console.log(time % 100);
 
-    // Calculate theta bas
+    //console.log(time % 100 < 10);
 
-    // Go through each model in our scene
+    // I KNOW THIS IS INCORRECT!! THE MODELS SHOULD NOT ROTATE ABOUT THE ORIGIN OF THE VIEW VOLUME, BUT RATHER THE MODEL ITSELF.
+    // I WILL FIX THIS TOMORROW!!!
+    // limit refresh
     for (let i = 0; i < scene.models.length; i++) {
-        // If model has animation property, we need to rotate it about the specified axis by theta degrees specified by our rotations per second (rps).
+        // If model has animation property, we need to rotate it about the specified axis by theta degrees specified by our rotations per second (rps) and time.
+        // More exactly. We are trying to determining how many revolutions have occured (i.e. theta [radians]) = rps [rev/s] x time [ms] x [2 pi rad / rev] * [1 s / 1000 ms]. 
+        // This theta value is used in a trig function (within our rotation transformation matrices), and all trig functions are periodic.
         if (scene.models[i].animation != null) {
+            // Calculate theta
+            //let theta = scene.models[i].animation.rps * time * 2 * Math.PI / 1000;
+            // Hardcode small theta for now
+            let theta = 0.00005;
 
+            // Declare animation matrix
+            let animationMatrix = new Matrix(4, 4);
+
+            // Determine axis of rotation
+            if (scene.models[i].animation.axis = "x") {
+                mat4x4RotateX(animationMatrix, theta);
+            } else if (scene.models[i].animation.axis = "y") {
+                mat4x4RotateY(animationMatrix, theta);
+            } else if (scene.models[i].animation.axis = "z") {
+                mat4x4RotateZ(animationMatrix, theta);
+            }
+
+            //console.log(animationMatrix);
+            //console.log(scene.models[i].vertices.length);
+        
+            // Transform the model vertices here. Maybe this should be in draw scene but I didn't want to have to store matrix somewhere.
+            for (let k = 0; k < scene.models[i].vertices.length; ++k){
+                // new list stores vertex locations within the connical view 
+                scene.models[i].vertices[k] = Matrix.multiply([animationMatrix,scene.models[i].vertices[k]]);
+            }
         }
-    };
+    }
 
     // step 3: draw scene
     drawScene();
@@ -138,11 +173,8 @@ function animate(timestamp) {
 // Main drawing code - use information contained in variable `scene`
 function drawScene() {
     //console.log(scene);
-
-    // TODO: implement drawing here!
-    // For each model, for each edge
-    //  * transform to canonical view volume // done
-    //matries creating
+    
+    // Create transformation matrix
     let transformView;
     if (scene.view.type == "perspective") {
         transformView = mat4x4Perspective(scene.view.prp, scene.view.srp, scene.view.vup, scene.view.clip);
@@ -152,7 +184,7 @@ function drawScene() {
         console.log("Error on scene view type");
     }
 
-    //  * project to 2D // done
+    // Create projection matrix and scale to window
     let projectView;
     let windowView = new Matrix(4, 4);
     mat4x4WindowProjection(windowView, view.width, view.height); 
@@ -163,34 +195,40 @@ function drawScene() {
     } else {
         console.log("Error on scene projection")
     }
-    //Step 1 transform all verts into the connical view volume
-    let transform_vert = [];
-    for(let i=0;i<scene.models[0].vertices.length;++i){
-        // new list stores vertex locations within the connical view 
-        transform_vert.push(Matrix.multiply([transformView,scene.models[0].vertices[i]]));
-        
-    }
-    //Step 2 clip all lines against the connonical view volume
 
+    // For each model in the scene, we need to follow this process:
+        // Step 1 transform all verts into the connical view volume
+        // Step 2 clip all lines against the connonical view volume
+        // Step 3 project clipped lines into 2D and scale to match screen coordinates 
+    for (let k = 0; k < scene.models.length; k++) {
+        //Step 1 transform all verts into the connical view volume
+        let transform_vert = [];
+        for(let i=0;i<scene.models[k].vertices.length;++i){
+            // new list stores vertex locations within the connical view 
+            transform_vert.push(Matrix.multiply([transformView,scene.models[k].vertices[i]]));
+        }
 
-    //Step 3 project clipped lines into 2D and scale to match screen coordinates 
-    for (let i=0;i<scene.models[0].edges.length;++i){
-        let edge = scene.models[0].edges[i];
-        for (let j = 0; j <edge.length-1; ++j){
-            let index_zero = edge[j];
-            let index_one = edge[j+1];
-            let vertex_zero = transform_vert[index_zero];
-            let vertex_one = transform_vert[index_one];
-            //clipping start
-            let lines = {pt0:vertex_zero,pt1:vertex_one};
-            let clipped_lines = clipLinePerspective(lines,-scene.view.clip[4]/scene.view.clip[5]);
-            if(clipped_lines != null){
-                let project_vertZero = Matrix.multiply([projectView,clipped_lines.pt0]);
-                let project_vertOne = Matrix.multiply([projectView,clipped_lines.pt1]);
+        // Go through each edge
+        for (let i=0;i<scene.models[k].edges.length;++i){
+            let edge = scene.models[k].edges[i];
+            for (let j = 0; j <edge.length-1; ++j){
+                let index_zero = edge[j];
+                let index_one = edge[j+1];
+                let vertex_zero = transform_vert[index_zero];
+                let vertex_one = transform_vert[index_one];
                 
-                vec4x1NonHomogeneous(project_vertZero);
-                vec4x1NonHomogeneous(project_vertOne);
-                drawLine(project_vertZero.x,project_vertZero.y,project_vertOne.x,project_vertOne.y);
+                //Step 2 clip all lines against the connonical view volume
+                let lines = {pt0:vertex_zero,pt1:vertex_one};
+                let clipped_lines = clipLinePerspective(lines,-scene.view.clip[4]/scene.view.clip[5]);
+                
+                if(clipped_lines != null){
+                    //Step 3 project clipped lines into 2D and scale to match screen coordinates 
+                    let project_vertZero = Matrix.multiply([projectView,clipped_lines.pt0]);
+                    let project_vertOne = Matrix.multiply([projectView,clipped_lines.pt1]);
+                    vec4NonHomogeneous(project_vertZero);
+                    vec4NonHomogeneous(project_vertOne);
+                    drawLine(project_vertZero.x, project_vertZero.y, project_vertOne.x, project_vertOne.y);
+                }
             }
         }
     }
@@ -280,6 +318,7 @@ function calculateCylinderVerticesAndEdges(myModel, center, radius, height, side
             capEdges.push(edgeIndex);
             edgeIndex++;
         }
+        capEdges.push(z*sides); // Need to make the last connection edge in the ring
         tempEdges.push(capEdges); // While we are here, let's add this polygon to our edge list
     }
 
@@ -308,21 +347,17 @@ function calculateConeVerticesAndEdges(myModel, center, radius, height, sides) {
     let tempVertices = [];
     let edgeIndex = 1; // Start at 1, reserve 0 for tip
     let baseEdges = [];
-    tempVertices.push(new Vector4(0, 0, 0, height)); // Append tip vertex
+    tempVertices.push(new Vector4(0, 0, height, 1)); // Append tip vertex
     for (let theta = 0; theta < 360; theta = theta + (360/sides)) { // Want only care about bottom cap, as oppossed to cylindrical
         let curX = radius * Math.cos(theta*Math.PI/180);
         let curY = radius * Math.sin(theta*Math.PI/180);
         tempVertices.push(new Vector4(curX, curY, 0, 1));
-        tempEdges.push([edgeIndex, 0]); // We are connecting base to tip here
+        tempEdges.push([0, edgeIndex]); // We are connecting base to tip here
         baseEdges.push(edgeIndex); // We are forming base polygon here
         edgeIndex++;
     }
+    baseEdges.push(1); // Need to make the last connection edge in the ring
     tempEdges.push(baseEdges); // Add base polygon to edge list
-
-    // Assign remaining model edges
-    for (index of tempEdges[0]) {
-        tempEdges.push([index, index+sides])
-    }
 
     // Translate to center
     let translateMatrix = new Matrix(4, 4);
@@ -491,9 +526,6 @@ function clipLineParallel(line) {
                 
             }else if (position == 5){
                 //Near 
-
-
-
             }
             
             //add neart and far
@@ -709,10 +741,8 @@ function loadNewScene() {
             }
             scene.models[i].matrix = new Matrix(4, 4);
         }
-        console.log(scene.models);
         calculateVerticesAndEdges();
-        drawScene();
-        console.log(scene.models);
+        window.requestAnimationFrame(animate);
     };
     reader.readAsText(scene_file.files[0], 'UTF-8');
 }

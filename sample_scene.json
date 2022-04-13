@@ -39,17 +39,6 @@
                 "axis": "y",
                 "rps": 0.8
             }
-        },
-        {
-            "type": "sphere",
-            "center": [5, 5, -10],
-            "radius": 4,
-            "slices": 5,
-            "stacks": 3,
-            "animation": {
-                "axis": "z",
-                "rps": 0.2
-            }
         }
     ]
 }

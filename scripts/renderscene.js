@@ -459,15 +459,15 @@ function clipLinePerspective(line, z_min) {
             //both points are inside the line, accept by returning line with same endpoints
             return {pt0:p0,pt1:p1};
         } else { // everything else
-            console.log("else");
+            //console.log("else");
             //Select endpoint that lies outside the view rectangle as point_one
             if(out0 != 000000){
                 point_one = p0;
-                console.log("out0: " + out0);
+               // console.log("out0: " + out0);
             }
             else{
                 point_one = p1;
-                console.log("out1: " + out1);
+              //  console.log("out1: " + out1);
             }
 
             // find the first bit set to 1 in the selected endpoint's outcode
@@ -476,17 +476,18 @@ function clipLinePerspective(line, z_min) {
             //let string_outcode = "" + point_one + "";
             let outcode_point = outcodePerspective(point_one, z_min);
             var base2 = (outcode_point).toString(2);
-            console.log("outcode_point: " + outcode_point);
-            for(var i = 0; i < base2.length; i++){
-                console.log("base: " + base2[i]);
+            //console.log("outcode_point: " + outcode_point);
+            //console.log(base2);
+            let string_outcode = "" + base2 + "";
+            let counter = 0;
+           for(var i = string_outcode.length; i >=0; i--){
+                if(string_outcode.charAt(i) == "1" && i == 0){
+                    break;
+                }
+                counter++;
             }
-            //this is a test
-            // let position =0;
-           // for(var i = 0; i<string_outcode.length; i++){
-               // if(string_outcode.charAt(i) == "1"){
-                 //    position = i;
-                   // break;
-               // }
+            position = 6 - counter;
+            //console.log("position: " + position);
             //}onsole.log(point_one)
             //console.log(string_outcode);
 
@@ -497,17 +498,17 @@ function clipLinePerspective(line, z_min) {
             let t;
 
             // Calculate parametric value t
-            if(string_outcode == "") {
+            if(position == 0) {
                 t = (-p0.x + p0.z)/(delta_x-delta_z);
-            } else if(i == 1) {
+            } else if(position == 1) {
                 t = (p0.x + p0.z)/(-delta_x-delta_z);
-            } else if(i == 2) {
+            } else if(position == 2) {
                 t = (-p0.y + p0.z)/(delta_x-delta_z);
-            } else if (i == 3) {
+            } else if (position == 3) {
                 t = (p0.y + p0.z)/(-delta_x-delta_z);
-            } else if (i == 4) {
+            } else if (position == 4) {
                 t = (-p0.z - 1)/(delta_z);
-            } else if (i == 5) {
+            } else if (position == 5) {
                 t = (-p0.z + z_min)/(-delta_z);
             }
 

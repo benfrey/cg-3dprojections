@@ -427,131 +427,7 @@ function outcodePerspective(vertex, z_min) {
 
 // Clip line - should either return a new line (with two endpoints inside view volume) or null (if line is completely outside view volume)
 function clipLineParallel(line) {
-
-    let result = null;
-    let p0 = Vector4(line.pt0.x, line.pt0.y, line.pt0.z,line.pt0.w);
-    let p1 = Vector4(line.pt1.x, line.pt1.y, line.pt1.z,line.pt1.w);
-    let out0 = outcodePerspective(p0, z_min);
-    let out1 = outcodePerspective(p1, z_min);
-    let repeat = 1;
-    let newPoint;
-    let b;
-    let y;
-    let x;
-    let z;
-    // TODO: implement clipping here!
-
-    while(repeat == 1){
-        //check if both are outside, to reject
-        if((out0 & out1) != 0){
-            repeat = 0;
-            //both points are outside the line, reject by returning null
-            return result;
-        }
-        //check if both are inside, to accept
-        else if((out0 | out1) == 0){
-            repeat = 0;
-            //both points are inside the line, accept by returning line with same endpoints
-            return {pt0:p0,pt1:p1};
-        }
-        else {
-            // * everything else
-            //Select and endpoint that lies outside the view rectangle
-            let point_one,point_zero;
-            if(out0 != 0000){
-                 point_one = p0;
-                 point_zero = p1;
-            }
-            else{
-                 point_one = p1;
-                 point_zero = p0;
-            }
-            //find the first bit set to 1 in the selected endpoint's outcode
-            //let string_outcode = "" + point_one + "";
-            let outcode_point = outcodePerspective(point_one, z_min);
-            var base2 = (outcode_point).toString(2);
-            console.log("outcode_point: " + outcode_point);
-            for(var i = 0; i < base2.length; i++){
-                console.log("base: " + base2[i]);
-            }
-            //this is a test
-            // let position =0;
-           // for(var i = 0; i<string_outcode.length; i++){
-               // if(string_outcode.charAt(i) == "1"){
-                 //    position = i;
-                   // break;
-               // }
-            //}
-            //calculate the intersection point between the line and corresponding edge
-            let delta_x =  (p1.x - p0.x);
-            let delta_y = ( p1.y - p0.y);
-            let delta_z = ( p1.z - p0.z);
-
-            if(position == 0){
-                //clip against left edge
-                    b = (point_one.y - ((delta_y/delta_x)*point_one.x));
-                    y = ((delta_y/delta_x)*point_one.x) + b;
-                    newPoint = [-(view.width / 2), y, point_one.z]; //left_edge, y - don't know if these are right */                
-            }
-            else if(position ==1){
-                //clip against right edge
-                 /*let changey = (p0.y - p1.y);
-                let changex = (p0.x - p1.x);
-                let b = (point_one.y - ((changey/changex)*point_one.x));
-                let y = ((changey/changex)*point_one.x) + b;
-                let newPoint = [view.width / 2, y, point_one.z]; //right_edge, y - don't know if these are right*/
-
-                b = (point_one.y - ((delta_y/delta_x)*point_one.x));
-                y = ((delta_y/delta_x)*point_one.x) + b;
-                newPoint = [view.width / 2, y, point_one.z]; //left_edge, y - don't know if these are right */
-
-            }
-            else if(position ==2){
-                //clip against bottom edge
-
-                b = (point_one.y - ((delta_y/delta_x)*point_one.x));
-                x = (point_one.y / (delta_y/delta_x)) - b;
-                newPoint = [x, -(view.height / 2)];//x, bottom_edge - don't know if these are right
-                
-            }
-            else if(position == 3){
-                //clip against top edge
-
-                b = (point_one.y - ((delta_y/delta_x)*point_one.x));
-                x = (point_one.y / (delta_y/delta_x)) - b;
-                newPoint = [x, view.height / 2];//x, top_edge - don't know if these are right
-                 
-            }else if(position==4){
-                //Far
-                b = (point_one.z - ((delta_z/delta_x)*point_one.x));
-                z = (point_one.z / (delta_z/delta_x)) - b;
-                newPoint = [x, -(view.height / 2)];//x, bottom_edge - don't know if these are right
-                
-            }else if (position == 5){
-                //Near 
-            }
-            
-            //add neart and far
-            //replace selected endpoint with this intersection point
-            if(point_one === p0){
-                p0 = newPoint;
-                //recalculate enpoint's outcode
-                out0 = outcodePerspective(p0);
-            }
-            else{
-                p1 = newPoint;
-                //recalculate enpoint's outcode
-                out1 = outcodePerspective(p1);
-            }
-            
-        
-
-            //try to accept/reject again (repeat process)
-        }
-
-    }
-    //console.log(results);
-    return result;
+   
 }
 
 // Clip line - should either return a new line (with two endpoints inside view volume) or null (if line is completely outside view volume)
@@ -597,17 +473,21 @@ function clipLinePerspective(line, z_min) {
             // find the first bit set to 1 in the selected endpoint's outcode
 
             // No, this shouldn't be point_one... why are we trying to convert a Vec4 into a string outcode....
-            let string_outcode = "" + outcodePerspective(point_one, z_min) + "";
-            //console.log("outcode: " + string_outcode);
-            for(var i = 0; i<string_outcode.length; i++){
-                //console.log("char: " + string_outcode.charAt(i));
-                if(string_outcode.charAt(i) == "1"){
-                    let position = i;
-                    console.log("position: " + position);
-                    break;
-                }
+            //let string_outcode = "" + point_one + "";
+            let outcode_point = outcodePerspective(point_one, z_min);
+            var base2 = (outcode_point).toString(2);
+            console.log("outcode_point: " + outcode_point);
+            for(var i = 0; i < base2.length; i++){
+                console.log("base: " + base2[i]);
             }
-            //console.log(point_one)
+            //this is a test
+            // let position =0;
+           // for(var i = 0; i<string_outcode.length; i++){
+               // if(string_outcode.charAt(i) == "1"){
+                 //    position = i;
+                   // break;
+               // }
+            //}onsole.log(point_one)
             //console.log(string_outcode);
 
             // Find parameters

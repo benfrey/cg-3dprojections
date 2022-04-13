@@ -439,7 +439,7 @@ function clipLinePerspective(line, z_min) {
     let out0 = outcodePerspective(p0, z_min);
     let out1 = outcodePerspective(p1, z_min);
     let repeat = 1;
-    let point_one;
+    let point_out, out_codeOut;
 
     // TODO: implement clipping here!
     while(repeat == 1){
@@ -451,7 +451,7 @@ function clipLinePerspective(line, z_min) {
             //both points are outside the line, reject by returning null
             return result;
         }
-        else if((out0 | out1 == 0)){  
+        else if((out0 | out1) == 0){  
             //console.log("accept");       
             //check if both are inside, to accept TRIVIAL ACCEPT
             repeat = 0;
@@ -462,11 +462,13 @@ function clipLinePerspective(line, z_min) {
             //console.log("else");
             //Select endpoint that lies outside the view rectangle as point_one
             if(out0 != 000000){
-                point_one = p0;
+                point_out = p0;
+                out_codeOut = out0;
                // console.log("out0: " + out0);
             }
             else{
-                point_one = p1;
+                point_out = p1;
+                out_codeOut = out1;
               //  console.log("out1: " + out1);
             }
 
@@ -474,19 +476,15 @@ function clipLinePerspective(line, z_min) {
 
             // No, this shouldn't be point_one... why are we trying to convert a Vec4 into a string outcode....
             //let string_outcode = "" + point_one + "";
-            let outcode_point = outcodePerspective(point_one, z_min);
-            var base2 = (outcode_point).toString(2);
+            //let outcode_point = outcodePerspective(point_one, z_min);
+            var base2 = (out_codeOut).toString(2);
             //console.log("outcode_point: " + outcode_point);
             //console.log(base2);
             let string_outcode = "" + base2 + "";
-            let counter = 0;
-           for(var i = string_outcode.length; i >=0; i--){
-                if(string_outcode.charAt(i) == "1" && i == 0){
-                    break;
-                }
-                counter++;
-            }
-            position = 6 - counter;
+           // console.log("here"+string_outcode); //add zeros to the left 
+           
+            position = 6 - string_outcode.length;
+
             //console.log("position: " + position);
             //}onsole.log(point_one)
             //console.log(string_outcode);
@@ -503,9 +501,9 @@ function clipLinePerspective(line, z_min) {
             } else if(position == 1) {
                 t = (p0.x + p0.z)/(-delta_x-delta_z);
             } else if(position == 2) {
-                t = (-p0.y + p0.z)/(delta_x-delta_z);
+                t = (-p0.y + p0.z)/(delta_y-delta_z);
             } else if (position == 3) {
-                t = (p0.y + p0.z)/(-delta_x-delta_z);
+                t = (p0.y + p0.z)/(-delta_y-delta_z);
             } else if (position == 4) {
                 t = (-p0.z - 1)/(delta_z);
             } else if (position == 5) {
@@ -519,19 +517,24 @@ function clipLinePerspective(line, z_min) {
             let new_point = Vector4(new_pointx,new_pointy,new_pointz,1);
 
             // Replace selected endpoint with this intersection point
-            if(point_one === p0){
+            if(out_codeOut === out0){
+               
                 p0 = new_point;
                 // Recalculate enpoint's outcode
                 out0 = outcodePerspective(p0);
+                
             }
             else{
+               
                 p1 = new_point;
+                
                 //recalculate enpoint's outcode
                 out1 = outcodePerspective(p1);
+                
             }   
         }
     }
-    return {pt0:p0,pt1:p1}; // return the clipped line
+    //return {pt0:p0,pt1:p1}; // return the clipped line
 }
 
 // Called when user presses a key on the keyboard down

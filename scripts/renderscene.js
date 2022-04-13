@@ -25,10 +25,10 @@ function init() {
     scene = {
         view: {
             type: 'perspective',
-            prp: Vector3(44, 20, -16),
-            srp: Vector3(20, 20, -40),
+            prp: Vector3(0, 0, 10),
+            srp: Vector3(0, 0, 0),
             vup: Vector3(0, 1, 0),
-            clip: [-19, 5, -10, 8, 12, 100]
+            clip: [-4, 20, -1, 17, 5, 75]
         },
         models: [
             {
@@ -218,13 +218,13 @@ function drawScene() {
                 let vertex_one = transform_vert[index_one];
                 
                 //Step 2 clip all lines against the connonical view volume
-                let lines = {pt0:vertex_zero,pt1:vertex_one};
-                let clipped_lines = clipLinePerspective(lines,-scene.view.clip[4]/scene.view.clip[5]);
+                let line = {pt0:vertex_zero,pt1:vertex_one};
+                let clippedLine = clipLinePerspective(line,-scene.view.clip[4]/scene.view.clip[5]);
                 
-                if(clipped_lines != null){
+                if(clippedLine != null){
                     //Step 3 project clipped lines into 2D and scale to match screen coordinates 
-                    let project_vertZero = Matrix.multiply([projectView,clipped_lines.pt0]);
-                    let project_vertOne = Matrix.multiply([projectView,clipped_lines.pt1]);
+                    let project_vertZero = Matrix.multiply([projectView,clippedLine.pt0]);
+                    let project_vertOne = Matrix.multiply([projectView,clippedLine.pt1]);
                     vec4NonHomogeneous(project_vertZero);
                     vec4NonHomogeneous(project_vertOne);
                     drawLine(project_vertZero.x, project_vertZero.y, project_vertOne.x, project_vertOne.y);
@@ -547,7 +547,7 @@ function clipLineParallel(line) {
         }
 
     }
-    console.log(results);
+    //console.log(results);
     return result;
 }
 
@@ -555,40 +555,40 @@ function clipLineParallel(line) {
 function clipLinePerspective(line, z_min) {
 
     let result = null;
-    let p0 = Vector4(line.pt0.x, line.pt0.y, line.pt0.z,line.pt0.w);
-    let p1 = Vector4(line.pt1.x, line.pt1.y, line.pt1.z,line.pt1.w);
+    let p0 = Vector4(line.pt0.x, line.pt0.y, line.pt0.z, line.pt0.w); // end point 0
+    let p1 = Vector4(line.pt1.x, line.pt1.y, line.pt1.z, line.pt1.w); // end point 1
     let out0 = outcodePerspective(p0, z_min);
     let out1 = outcodePerspective(p1, z_min);
     let repeat = 1;
     let point_one;
-    // TODO: implement clipping here!
 
+    // TODO: implement clipping here!
     while(repeat == 1){
-        //check if both are outside, to reject
         if((out0 & out1) != 0){
+            // check if both are outside, to reject TRIVIAL REJECT
             repeat = 0;
+
             //both points are outside the line, reject by returning null
             return result;
         }
-        //check if both are inside, to accept
-        else if((out0 | out1 == 0)){
+        else if((out0 | out1 == 0)){         
+            //check if both are inside, to accept TRIVIAL ACCEPT
             repeat = 0;
 
             //both points are inside the line, accept by returning line with same endpoints
             return {pt0:p0,pt1:p1};
-        }
-        else {
-            // * everything else
-            //Select and endpoint that lies outside the view rectangle
-            if(out0 != 0000){
+        } else { // everything else
+            //Select endpoint that lies outside the view rectangle as point_one
+            if(out0 != 000000){
                 point_one = p0;
-                console.log("is p0"+p0)
             }
             else{
-                 point_one = p1;
-                 console.log("is p1"+p1)
+                point_one = p1;
             }
-            //find the first bit set to 1 in the selected endpoint's outcode
+
+            // find the first bit set to 1 in the selected endpoint's outcode
+
+            // No, this shouldn't be point_one... why are we trying to convert a Vec4 into a string outcode....
             let string_outcode = "" + point_one + "";
             for(var i = 0; i<string_outcode.length; i++){
                 if(string_outcode.charAt(i) == "1"){
@@ -596,75 +596,50 @@ function clipLinePerspective(line, z_min) {
                     break;
                 }
             }
+            //console.log(point_one)
+            //console.log(string_outcode);
 
-            let delta_x =  (p1.x - p0.x);
-            let delta_y = ( p1.y - p0.y);
-            let delta_z = ( p1.z - p0.z);
+            // Find parameters
+            let delta_x = (p1.x - p0.x);
+            let delta_y = (p1.y - p0.y);
+            let delta_z = (p1.z - p0.z);
             let t;
-            //calculate the intersection point between the line and corresponding edge
-            if(i == 0){
 
+            // Calculate parametric value t
+            if(string_outcode == "") {
                 t = (-p0.x + p0.z)/(delta_x-delta_z);
-
-                //clip against left edge
-               /* let changey = (p0.y - p1.y);
-                let changex = (p0.x - p1.x);
-                let b = (point_one.y - ((changey/changex)*point_one.x));
-                let y = ((changey/changex)*point_one.x) + b;
-                let newPoint = [-(view.width / 2), y, point_one.z]; //left_edge, y - don't know if these are right */
-            }
-            else if(i ==1){
-                //clip against right edge
+            } else if(i == 1) {
                 t = (p0.x + p0.z)/(-delta_x-delta_z);
-               
-            }
-            else if(i ==2){
-                //clip against bottom edge
+            } else if(i == 2) {
                 t = (-p0.y + p0.z)/(delta_x-delta_z);
-                /*let changey = (p0.y - p1.y);
-                let changex = (p0.x - p1.x);
-                let b = (point_one.y - ((changey/changex)*point_one.x));
-                let x = (point_one.y / (changey/changex)) - b;
-                let newPoint = [x, -(view.height / 2), point_one.z]; //x, bottom_edge - don't know if these are right*/
-            }
-            else if (i==3){
-                //clip against top edge
+            } else if (i == 3) {
                 t = (p0.y + p0.z)/(-delta_x-delta_z);
-               /* let changey = (p0.y - p1.y);
-                let changex = (p0.x - p1.x);
-                let b = (point_one.y - ((changey/changex)*point_one.x));
-                let x = (point_one.y / (changey/changex)) - b;
-                let newPoint = [x, view.height / 2, point_one.z]; //x, top_edge - don't know if these are right*/
-            }else if(i ==4){
-                //Far
-                t = (-p0.z -1)/(delta_z);
-                
-            }else if(i==5){
-                //Near
-                t = (-p0.z -(scene.view.clip[4]/scene.view.clip[5]))/(-delta_z);
+            } else if (i == 4) {
+                t = (-p0.z - 1)/(delta_z);
+            } else if (i == 5) {
+                t = (-p0.z + z_min)/(-delta_z);
             }
 
-            //replace selected endpoint with this intersection point
+            // Use parametric equations to find new components
             let new_pointx = (1-t)*p0.x+t*p1.x;
             let new_pointy = (1-t)*p0.y+t*p1.y;
             let new_pointz = (1-t)*p0.z+t*p1.z;
             let new_point = Vector4(new_pointx,new_pointy,new_pointz,1);
-            //replace selected endpoint with this intersection point
+
+            // Replace selected endpoint with this intersection point
             if(point_one === p0){
                 p0 = new_point;
-                //recalculate enpoint's outcode
+                // Recalculate enpoint's outcode
                 out0 = outcodePerspective(p0);
-                console.log("you are here"+point_one);
             }
             else{
                 p1 = new_point;
                 //recalculate enpoint's outcode
                 out1 = outcodePerspective(p1);
-                console.log("you are here"+point_one.x);
-           }   }
-
+            }   
+        }
     }
-    return {pt0:p0,pt1:p1};
+    return {pt0:p0,pt1:p1}; // return the clipped line
 }
 
 // Called when user presses a key on the keyboard down

@@ -22,7 +22,7 @@ function init() {
     ctx = view.getContext('2d');
 
     // initial scene... feel free to change this
-    origScene = {
+    scene = {
         view: {
             type: 'perspective',
             prp: Vector3(44, 20, -16),
@@ -58,7 +58,8 @@ function init() {
             }
         ]
     };
-    scene = {
+    /*
+    testScene = {
         view: {
             type: 'perspective',
             prp: Vector3(0, 10, -5),
@@ -94,6 +95,7 @@ function init() {
             }
         ]
     };
+    */
 
     // event handler for pressing arrow keys
     document.addEventListener('keydown', onKeyDown, false);
@@ -113,7 +115,16 @@ function animate(timestamp) {
 
     //For animating by time, it’s probably easiest to explain with an example. Say that I want to have my model take 2 seconds to rotate once. Given a typical monitor with a 60 Hz refresh rate, this would mean incrementing the rotation angle by 3 degrees each frame (360 degrees / 120 frames in 2 seconds). However, if we made this assumption, then someone using a monitor with a faster or slower refresh rate would see the animation going much faster or slower than desired. Therefore, you should calculate how much to rotate the model based on how much time has passed. If someone has a faster refresh rate on their monitor, then less time would have passed since the previous frame and we should not rotate quite as much.
     // step 2: transform models based on time
-    // TODO: implement this! // may need some help friday
+
+    // Calculate theta bas
+
+    // Go through each model in our scene
+    for (let i = 0; i < scene.models.length; i++) {
+        // If model has animation property, we need to rotate it about the specified axis by theta degrees specified by our rotations per second (rps).
+        if (scene.models[i].animation != null) {
+
+        }
+    };
 
     // step 3: draw scene
     drawScene();
@@ -181,53 +192,154 @@ function drawScene() {
                 vec4x1NonHomogeneous(project_vertOne);
                 drawLine(project_vertZero.x,project_vertZero.y,project_vertOne.x,project_vertOne.y);
             }
-            
-
         }
     }
-    // Print to projection matrix to 2D to log:
-    //console.log("Projection to 2D:")
-    //console.log(projectView);
+}
 
-    // * project to window view volume
-   /* let windowView = new Matrix(4, 4);
-    mat4x4WindowProjection(windowView, view.width, view.height);
-    windowView = Matrix.multiply([windowView, projectView]);
+// Calculate vertices and edges for models loaded in
+function calculateVerticesAndEdges() {
+    //console.log(scene);
+    
+    // Go through each model in our scene
+    for (let i = 0; i < scene.models.length; i++) {        
+        // Check model type, this will indicate if vertices and edges need to be calculated
+        if (scene.models[i].type === 'generic') {
+            // We have generic model
+            
+            // Do nothing, generic models already have vertices and edges
+        } else if (scene.models[i].type === 'cube') {
+            // We have a cube
 
-    // * draw line - multiply projectView by scene vertices and draw to canvas
+            // Given a model, append vertex and edge arrays based on center, width, height, and depth 
+            calculateCubeVerticesAndEdges(scene.models[i], scene.models[i].center, scene.models[i].width, scene.models[i].height, scene.models[i].depth); 
+        } else if (scene.models[i].type === 'cone') {
+            // We have a cone
 
-    // First create a copy of the scene vertices so that we can project them and divide by w
-    let projectedVertices = Object.assign({}, scene.models[0].vertices);
-    for (let i = 0; i < Object.entries(projectedVertices).length; i++) {
-        //console.log(projectedVertices[i]);
+            // Given a model, append vertex and edge arrays based on center, radius, height, and sides 
+            calculateConeVerticesAndEdges(scene.models[i], scene.models[i].center, scene.models[i].radius, scene.models[i].height, scene.models[i].sides); 
+        } else if (scene.models[i].type === 'cylinder') {
+            // We have a cylinder
 
-        // Vertex projection - we select index i because we grab the value of the object, not the key
-        projectedVertices[i] = Matrix.multiply([windowView, projectedVertices[i]]);
+            // Given a model, append vertex and edge arrays based on center, radius, height, and sides 
+            calculateCylinderVerticesAndEdges(scene.models[i], scene.models[i].center, scene.models[i].radius, scene.models[i].height, scene.models[i].sides); 
+        } else if (scene.models[i].type === 'sphere') {
+            // We have a sphere
 
-        // Divide each vector component by w
-        vec4x1NonHomogeneous(projectedVertices[i]);
+            // Given a model, append vertex and edge arrays based on center, radius, slices, and stacks 
+            calculateSphereVerticesAndEdges(scene.models[i], scene.models[i].center, scene.models[i].radius, scene.models[i].slices, scene.models[i].stacks); 
+        }
     }
-    //console.log(projectedVertices);
+}
 
-    // Then draw lines to canvas based on edge connections defined within the scene
-    for (let edgeArray of Object.entries(scene.models[0].edges)) {
-       // console.log(edgeArray[1]);
-        //console.log(edgeArray[1][0]);
+// Calculate vertices and assign edges for a cubic model
+function calculateCubeVerticesAndEdges(myModel, center, width, height, depth) {
+    // Build model vertices
+    let tempVertices = [new Vector4(0, 0, 0, 1),
+                        new Vector4(depth, 0, 0, 1),
+                        new Vector4(depth, width, 0, 1),
+                        new Vector4(0, width, 0, 1),
+                        new Vector4(0, 0, height, 1),
+                        new Vector4(depth, 0, height, 1),
+                        new Vector4(depth, width, height, 1),
+                        new Vector4(0, width, height, 1)];
+    
+    // Asign model edges
+    let tempEdges = [[0, 1, 2, 3, 0],
+                     [4, 5, 6, 7, 4],
+                     [0, 4],
+                     [1, 5],
+                     [2, 6],
+                     [3, 7]];
 
-        // Iterate thrrough the edge array until we run out of vertex indice pairs
-        // Note: Dr. Marrinan already returnes to original vertex index
-        // for closed loops (we start at vertex v and end at v), thus we only
-        // go through length-1
-        for (let i = 0; i < (edgeArray[1].length)-1; i++) {
-            // Test indexing
-            //console.log(projectedVertices[edgeArray[1][i]].x);
-            //console.log(projectedVertices[edgeArray[1][i+1]].x);
+    // Translate to center
+    let translateMatrix = new Matrix(4, 4);
+    mat4x4Translate(translateMatrix, center.x-(depth/2), center.y-(width/2), center.z-(height/2))
+    for (let i = 0; i < tempVertices.length; i++) {
+        // Vertex translation
+        tempVertices[i] = Matrix.multiply([translateMatrix, tempVertices[i]]);
+    }
 
-            // Drawing line from (v[e[i]].x, v[e[i]].y) to (v[e[i+1]].x, v[e[i+1]].y)
-           // console.log("Drawing line from (" + projectedVertices[edgeArray[1][i]].x + " ," + projectedVertices[edgeArray[1][i]].y + ") to (" + projectedVertices[edgeArray[1][i+1]].x + " ," + projectedVertices[edgeArray[1][i+1]].y +")");
-            drawLine(projectedVertices[edgeArray[1][i]].x, projectedVertices[edgeArray[1][i]].y, projectedVertices[edgeArray[1][i+1]].x, projectedVertices[edgeArray[1][i+1]].y);
-        }//divide by w 
-    } */
+    // Update model in scene
+    myModel['vertices'] = tempVertices;
+    myModel['edges'] = tempEdges;
+}
+
+// Calculate vertices and edges for a cylindrical model
+function calculateCylinderVerticesAndEdges(myModel, center, radius, height, sides) {
+    // Build model vertices
+    let tempEdges = [];
+    let tempVertices = [];
+    let edgeIndex = 0;
+    for (let z = 0; z < 2; z++) { // Want top and bottom cap (only 2 z slices)
+        let capEdges = [];
+        let curZ = z * height;
+        for (let theta = 0; theta < 360; theta = theta + (360/sides)) {
+            let curX = radius * Math.cos(theta*Math.PI/180);
+            let curY = radius * Math.sin(theta*Math.PI/180);
+            tempVertices.push(new Vector4(curX, curY, curZ, 1));
+            capEdges.push(edgeIndex);
+            edgeIndex++;
+        }
+        tempEdges.push(capEdges); // While we are here, let's add this polygon to our edge list
+    }
+
+    // Assign remaining model edges
+    for (index of tempEdges[0]) {
+        tempEdges.push([index, index+sides]) // Connecting btm and top caps
+    }
+
+    // Translate to center
+    let translateMatrix = new Matrix(4, 4);
+    mat4x4Translate(translateMatrix, center.x-(radius/2), center.y-(radius/2), center.z-(height/2))
+    for (let i = 0; i < tempVertices.length; i++) {
+        // Vertex translation
+        tempVertices[i] = Matrix.multiply([translateMatrix, tempVertices[i]]);
+    }
+
+    // Update model in scene
+    myModel['vertices'] = tempVertices;
+    myModel['edges'] = tempEdges;
+}
+
+// Calculate vertices and edges for a conical model
+function calculateConeVerticesAndEdges(myModel, center, radius, height, sides) {
+    // Build model vertices
+    let tempEdges = [];
+    let tempVertices = [];
+    let edgeIndex = 1; // Start at 1, reserve 0 for tip
+    let baseEdges = [];
+    tempVertices.push(new Vector4(0, 0, 0, height)); // Append tip vertex
+    for (let theta = 0; theta < 360; theta = theta + (360/sides)) { // Want only care about bottom cap, as oppossed to cylindrical
+        let curX = radius * Math.cos(theta*Math.PI/180);
+        let curY = radius * Math.sin(theta*Math.PI/180);
+        tempVertices.push(new Vector4(curX, curY, 0, 1));
+        tempEdges.push([edgeIndex, 0]); // We are connecting base to tip here
+        baseEdges.push(edgeIndex); // We are forming base polygon here
+        edgeIndex++;
+    }
+    tempEdges.push(baseEdges); // Add base polygon to edge list
+
+    // Assign remaining model edges
+    for (index of tempEdges[0]) {
+        tempEdges.push([index, index+sides])
+    }
+
+    // Translate to center
+    let translateMatrix = new Matrix(4, 4);
+    mat4x4Translate(translateMatrix, center.x-(radius/2), center.y-(radius/2), center.z-(height/2))
+    for (let i = 0; i < tempVertices.length; i++) {
+        // Vertex translation
+        tempVertices[i] = Matrix.multiply([translateMatrix, tempVertices[i]]);
+    }
+
+    // Update model in scene
+    myModel['vertices'] = tempVertices;
+    myModel['edges'] = tempEdges;
+}
+
+// Calculate vertices and edges for a spherical model
+function calculateSphereVerticesAndEdges(myModel, center, radius, slices, stacks) { // think of slices as longitude lines, stacks as latitude lines
+    // Implement later
 }
 
 // Get outcode for vertex (parallel view volume)
@@ -597,6 +709,10 @@ function loadNewScene() {
             }
             scene.models[i].matrix = new Matrix(4, 4);
         }
+        console.log(scene.models);
+        calculateVerticesAndEdges();
+        drawScene();
+        console.log(scene.models);
     };
     reader.readAsText(scene_file.files[0], 'UTF-8');
 }

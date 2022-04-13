@@ -113,8 +113,6 @@ function mat4x4MPer() {
     return mper;
 }
 
-
-
 ///////////////////////////////////////////////////////////////////////////////////
 // 4x4 Transform Matrices                                                         //
 ///////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +182,7 @@ function mat4x4WindowProjection(mat4x4, width, height) {
 }
 
 // set values of existing 4x4 matrix to return to non-homogenous coordinate system (divide by w)
-function vec4x1NonHomogeneous(vec4) {
+function vec4NonHomogeneous(vec4) {
     vec4.values = [vec4.x/vec4.w, vec4.y/vec4.w, vec4.z/vec4.w, vec4.w];
 }
 

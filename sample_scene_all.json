@@ -1,18 +1,18 @@
 {
     "view": {
-        "type": "parallel",
-        "prp": [0, 0, 10],
-        "srp": [0, 0, 0],
+        "type": "perspective",
+        "prp": [44, 20, -16],
+        "srp": [20, 20, -40],
         "vup": [0, 1, 0],
-        "clip": [-4, 20, -1, 17, 5, 75]
+        "clip": [-19, 5, -10, 8, 12, 100]
     },
     "models": [
         {
             "type": "cube",
             "center": [10, 6, -45],
-            "width": 8,
-            "height": 8,
-            "depth": 8,
+            "width": 40,
+            "height": 40,
+            "depth": 40,
             "animation": {
                 "axis": "x",
                 "rps": 1.5
@@ -38,17 +38,6 @@
             "animation": {
                 "axis": "y",
                 "rps": 0.8
-            }
-        },
-        {
-            "type": "sphere",
-            "center": [5, 5, -10],
-            "radius": 4,
-            "slices": 5,
-            "stacks": 3,
-            "animation": {
-                "axis": "z",
-                "rps": 0.2
             }
         }
     ]

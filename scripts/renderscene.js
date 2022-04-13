@@ -467,15 +467,20 @@ function clipLineParallel(line) {
                  point_zero = p0;
             }
             //find the first bit set to 1 in the selected endpoint's outcode
-            let string_outcode = "" + point_one + "";
-            let position =0;
-            for(var i = 0; i<string_outcode.length; i++){
-
-                if(string_outcode.charAt(i) == "1"){
-                     position = i;
-                    break;
-                }
+            //let string_outcode = "" + point_one + "";
+            let outcode_point = outcodePerspective(point_one, z_min);
+            var base2 = (outcode_point).toString(2);
+            console.log("outcode_point: " + outcode_point);
+            for(var i = 0; i < base2.length; i++){
+                console.log("base: " + base2[i]);
             }
+            // let position =0;
+           // for(var i = 0; i<string_outcode.length; i++){
+               // if(string_outcode.charAt(i) == "1"){
+                 //    position = i;
+                   // break;
+               // }
+            //}
             //calculate the intersection point between the line and corresponding edge
             let delta_x =  (p1.x - p0.x);
             let delta_y = ( p1.y - p0.y);
@@ -485,10 +490,7 @@ function clipLineParallel(line) {
                 //clip against left edge
                     b = (point_one.y - ((delta_y/delta_x)*point_one.x));
                     y = ((delta_y/delta_x)*point_one.x) + b;
-                    newPoint = [-(view.width / 2), y, point_one.z]; //left_edge, y - don't know if these are right */
-               
-
-                
+                    newPoint = [-(view.width / 2), y, point_one.z]; //left_edge, y - don't know if these are right */                
             }
             else if(position ==1){
                 //clip against right edge
@@ -565,34 +567,42 @@ function clipLinePerspective(line, z_min) {
     // TODO: implement clipping here!
     while(repeat == 1){
         if((out0 & out1) != 0){
+            //console.log("reject");
             // check if both are outside, to reject TRIVIAL REJECT
             repeat = 0;
 
             //both points are outside the line, reject by returning null
             return result;
         }
-        else if((out0 | out1 == 0)){         
+        else if((out0 | out1 == 0)){  
+            //console.log("accept");       
             //check if both are inside, to accept TRIVIAL ACCEPT
             repeat = 0;
 
             //both points are inside the line, accept by returning line with same endpoints
             return {pt0:p0,pt1:p1};
         } else { // everything else
+            console.log("else");
             //Select endpoint that lies outside the view rectangle as point_one
             if(out0 != 000000){
                 point_one = p0;
+                console.log("out0: " + out0);
             }
             else{
                 point_one = p1;
+                console.log("out1: " + out1);
             }
 
             // find the first bit set to 1 in the selected endpoint's outcode
 
             // No, this shouldn't be point_one... why are we trying to convert a Vec4 into a string outcode....
-            let string_outcode = "" + point_one + "";
+            let string_outcode = "" + outcodePerspective(point_one, z_min) + "";
+            //console.log("outcode: " + string_outcode);
             for(var i = 0; i<string_outcode.length; i++){
+                //console.log("char: " + string_outcode.charAt(i));
                 if(string_outcode.charAt(i) == "1"){
                     let position = i;
+                    console.log("position: " + position);
                     break;
                 }
             }

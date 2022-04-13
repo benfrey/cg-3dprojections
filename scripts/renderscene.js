@@ -178,13 +178,15 @@ function drawScene() {
     // First go through each model in the scene. Then, for each model, we want to create a copy of the model vertices 
     // so that we can project them to the view volume and divide by w to return to non-homogeneous coordinates.
     for (let i = 0; i < scene.models.length; i++) {
+        
         var projectedVertices = Object.assign({}, scene.models[i].vertices);
+
         for (let k = 0; k < Object.entries(projectedVertices).length; k++) {
             //console.log(projectedVertices[i]);
 
             // Vertex projection - we select index i because we grab the value of the object, not the key
             projectedVertices[k] = Matrix.multiply([windowView, projectedVertices[k]]);
-
+            //console.log(projectedVertices[k]);
             // Divide each vector component by w
             vec4NonHomogeneous(projectedVertices[k]);
         }
@@ -192,29 +194,35 @@ function drawScene() {
     //console.log(projectedVertices);
 
     // Then draw lines to canvas based on edge connections defined within the scene
-    for (let edgeArray of Object.entries(scene.models[0].edges)) {
-       // console.log(edgeArray[1]);
-        //console.log(edgeArray[1][0]);
+    for (let k = 0; k < scene.models.length; k++) {
+        for (let edgeArray of Object.entries(scene.models[k].edges)) {
+            // console.log(edgeArray[1]);
+            //console.log(edgeArray[1][0]);
 
-        // Iterate thrrough the edge array until we run out of vertex indice pairs
-        // Note: Dr. Marrinan already returnes to original vertex index
-        // for closed loops (we start at vertex v and end at v), thus we only
-        // go through length-1
-        for (let i = 0; i < (edgeArray[1].length)-1; i++) {
-            // Test indexing
-            //console.log(projectedVertices[edgeArray[1][i]].x);
-            //console.log(projectedVertices[edgeArray[1][i+1]].x);
+            // Iterate thrrough the edge array until we run out of vertex indice pairs
+            // Note: Dr. Marrinan already returnes to original vertex index
+            // for closed loops (we start at vertex v and end at v), thus we only
+            // go through length-1
+            for (let i = 0; i < (edgeArray[1].length)-1; i++) {
+                console.log("DO WE MAKE IN HERE?")
+                
+                // Test indexing
+                //console.log(projectedVertices[edgeArray[1][i]].x);
+                //console.log(projectedVertices[edgeArray[1][i+1]].x);
 
-            // Drawing line from (v[e[i]].x, v[e[i]].y) to (v[e[i+1]].x, v[e[i+1]].y)
-            // console.log("Drawing line from (" + projectedVertices[edgeArray[1][i]].x + " ," + projectedVertices[edgeArray[1][i]].y + ") to (" + projectedVertices[edgeArray[1][i+1]].x + " ," + projectedVertices[edgeArray[1][i+1]].y +")");
-            drawLine(projectedVertices[edgeArray[1][i]].x, projectedVertices[edgeArray[1][i]].y, projectedVertices[edgeArray[1][i+1]].x, projectedVertices[edgeArray[1][i+1]].y);
+                // Drawing line from (v[e[i]].x, v[e[i]].y) to (v[e[i+1]].x, v[e[i+1]].y)
+                // console.log("Drawing line from (" + projectedVertices[edgeArray[1][i]].x + " ," + projectedVertices[edgeArray[1][i]].y + ") to (" + projectedVertices[edgeArray[1][i+1]].x + " ," + projectedVertices[edgeArray[1][i+1]].y +")");
+                drawLine(projectedVertices[edgeArray[1][i]].x, projectedVertices[edgeArray[1][i]].y, projectedVertices[edgeArray[1][i+1]].x, projectedVertices[edgeArray[1][i+1]].y);
+            }
         }
     }
+
+    console.log("DREW SCENE")
 }
 
 // Calculate vertices and edges for models loaded in
 function calculateVerticesAndEdges() {
-    console.log(scene);
+    //console.log(scene);
     
     // Go through each model in our scene
     for (let i = 0; i < scene.models.length; i++) {        
@@ -688,8 +696,8 @@ function loadNewScene() {
         }
         console.log(scene.models);
         calculateVerticesAndEdges();
-        console.log(scene.models);
         drawScene();
+        console.log(scene.models);
     };
     reader.readAsText(scene_file.files[0], 'UTF-8');
 }

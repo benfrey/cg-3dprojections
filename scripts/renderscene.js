@@ -58,12 +58,12 @@ function init() {
             },
             {
                 type: "cube",
-                center: Vector4(8, 6, -20, 1),  //center: Vector4(0, 0, 0, 1),
+                center: Vector4(8, 6, -20, 1),
                 width: 16,
                 height: 12,
                 depth: 4,
                 animation: {
-                    axis: "y",
+                    axis: "x",
                     rps: 0.1
                 }
             },
@@ -75,7 +75,7 @@ function init() {
                 sides: 8,
                 animation: {
                     axis: "y",
-                    rps: 0.1
+                    rps: 0.2
                 }
             },
             {
@@ -86,7 +86,7 @@ function init() {
                 sides: 12,
                 animation: {
                     axis: "y",
-                    rps: 0.1
+                    rps: 0.5
                 }
             }
         ]

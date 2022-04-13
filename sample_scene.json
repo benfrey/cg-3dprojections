@@ -37,7 +37,7 @@
             "depth": 4,
             "animation": {
                 "axis": "x",
-                "rps": 1.5
+                "rps": 0.1
             }
         },
         {
@@ -48,7 +48,7 @@
             "sides": 8,
             "animation": {
                 "axis": "y",
-                "rps": 0.5
+                "rps": 0.2
             }
         },
         {
@@ -59,7 +59,7 @@
             "sides": 12,
             "animation": {
                 "axis": "y",
-                "rps": 0.8
+                "rps": 0.5
             }
         }
     ]

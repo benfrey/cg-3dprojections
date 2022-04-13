@@ -474,6 +474,7 @@ function clipLineParallel(line) {
             for(var i = 0; i < base2.length; i++){
                 console.log("base: " + base2[i]);
             }
+            //this is a test
             // let position =0;
            // for(var i = 0; i<string_outcode.length; i++){
                // if(string_outcode.charAt(i) == "1"){

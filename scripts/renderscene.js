@@ -25,10 +25,10 @@ function init() {
     scene = {
         view: {
             type: 'perspective',
-            prp: Vector3(0, 0, 10),
-            srp: Vector3(0, 0, 0),
+            prp: Vector3(44, 20, -16),
+            srp: Vector3(20, 20, -40),
             vup: Vector3(0, 1, 0),
-            clip: [-4, 20, -1, 17, 5, 75]
+            clip: [-19, 5, -10, 8, 12, 100]
         },
         models: [
             {
@@ -55,47 +55,45 @@ function init() {
                     [4, 9]
                 ],
                 matrix: new Matrix(4, 4)
-            }
-        ]
-    };
-    /*
-    testScene = {
-        view: {
-            type: 'perspective',
-            prp: Vector3(0, 10, -5),
-            srp: Vector3(20, 15, -40),
-            vup: Vector3(1, 1, 0),
-            clip: [-12, 6, -12, 6, 10, 100]
-        },
-        models: [
+            },
             {
-                type: 'generic',
-                vertices: [
-                    Vector4( 0,  0, -30, 1),
-                    Vector4(20,  0, -30, 1),
-                    Vector4(20, 12, -30, 1),
-                    Vector4(10, 20, -30, 1),
-                    Vector4( 0, 12, -30, 1),
-                    Vector4( 0,  0, -60, 1),
-                    Vector4(20,  0, -60, 1),
-                    Vector4(20, 12, -60, 1),
-                    Vector4(10, 20, -60, 1),
-                    Vector4( 0, 12, -60, 1)
-                ],
-                edges: [
-                    [0, 1, 2, 3, 4, 0],
-                    [5, 6, 7, 8, 9, 5],
-                    [0, 5],
-                    [1, 6],
-                    [2, 7],
-                    [3, 8],
-                    [4, 9]
-                ],
-                matrix: new Matrix(4, 4)
+                type: "cube",
+                center: Vector4(8, 6, -20, 1),  //center: Vector4(0, 0, 0, 1),
+                width: 16,
+                height: 12,
+                depth: 4,
+                animation: {
+                    axis: "y",
+                    rps: 0.1
+                }
+            },
+            {
+                type: "cone",
+                center: Vector4(8, 30, -20, 1),
+                radius: 5,
+                height: 10,
+                sides: 8,
+                animation: {
+                    axis: "y",
+                    rps: 0.1
+                }
+            },
+            {
+                type: "cylinder",
+                center: Vector4(10, 40, -45, 1),
+                radius: 5,
+                height: 10,
+                sides: 12,
+                animation: {
+                    axis: "y",
+                    rps: 0.1
+                }
             }
         ]
     };
-    */
+    
+    // Calculate vertices for non-generic models
+    //calculateVerticesAndEdges();
 
     // event handler for pressing arrow keys
     document.addEventListener('keydown', onKeyDown, false);
@@ -108,7 +106,7 @@ function init() {
 
 // Animation loop - repeatedly calls rendering code
 function animate(timestamp) {
-
+    //console.log(scene);
     ctx.clearRect(0, 0, view.width, view.height);
     // step 1: calculate time (time since start)
     let time = timestamp - start_time;
@@ -134,32 +132,39 @@ function animate(timestamp) {
         // This theta value is used in a trig function (within our rotation transformation matrices), and all trig functions are periodic.
         if (scene.models[i].animation != null) {
             // Calculate theta
-            //let theta = scene.models[i].animation.rps * time * 2 * Math.PI / 1000;
+            let theta = scene.models[i].animation.rps * time * 2 * Math.PI / 1000;
+            
             // Hardcode small theta for now
-            let theta = 0.00005;
+            //let theta = time;
 
             // Declare animation matrix
             let animationMatrix = new Matrix(4, 4);
 
             // Determine axis of rotation
-            if (scene.models[i].animation.axis = "x") {
+            if (scene.models[i].animation.axis == "x") {
+                console.log("Rotate X");
                 mat4x4RotateX(animationMatrix, theta);
-            } else if (scene.models[i].animation.axis = "y") {
+            } else if (scene.models[i].animation.axis == "y") {
+                console.log("Rotate Y");
                 mat4x4RotateY(animationMatrix, theta);
-            } else if (scene.models[i].animation.axis = "z") {
+            } else if (scene.models[i].animation.axis == "z") {
+                console.log("Rotate Z");
                 mat4x4RotateZ(animationMatrix, theta);
             }
 
-            //console.log(animationMatrix);
-            //console.log(scene.models[i].vertices.length);
-        
-            // Transform the model vertices here. Maybe this should be in draw scene but I didn't want to have to store matrix somewhere.
-            for (let k = 0; k < scene.models[i].vertices.length; ++k){
+            // Add animation matrix as property of model
+            scene.models[i]['matrix'] = animationMatrix;
+
+            //Transform the model vertices here. Maybe this should be in draw scene but I didn't want to have to store matrix somewhere.
+            /*for (let k = 0; k < scene.models[i].vertices.length; ++k){
                 // new list stores vertex locations within the connical view 
                 scene.models[i].vertices[k] = Matrix.multiply([animationMatrix,scene.models[i].vertices[k]]);
-            }
+            }*/
         }
     }
+
+    // Recalculate vertices and edges for animated models
+    calculateVerticesAndEdges();
 
     // step 3: draw scene
     drawScene();
@@ -172,9 +177,9 @@ function animate(timestamp) {
 
 // Main drawing code - use information contained in variable `scene`
 function drawScene() {
-    //console.log(scene);
+    console.log(scene);
     
-    // Create transformation matrix
+    // Create view matrix
     let transformView;
     if (scene.view.type == "perspective") {
         transformView = mat4x4Perspective(scene.view.prp, scene.view.srp, scene.view.vup, scene.view.clip);
@@ -197,6 +202,7 @@ function drawScene() {
     }
 
     // For each model in the scene, we need to follow this process:
+        // Step 0 apply animation based on time to each model vertex
         // Step 1 transform all verts into the connical view volume
         // Step 2 clip all lines against the connonical view volume
         // Step 3 project clipped lines into 2D and scale to match screen coordinates 
@@ -270,16 +276,16 @@ function calculateVerticesAndEdges() {
 }
 
 // Calculate vertices and assign edges for a cubic model
-function calculateCubeVerticesAndEdges(myModel, center, width, height, depth) {
+function calculateCubeVerticesAndEdges(myModel, center, width, height, depth) { // x width, y height, z depth
     // Build model vertices
     let tempVertices = [new Vector4(0, 0, 0, 1),
-                        new Vector4(depth, 0, 0, 1),
-                        new Vector4(depth, width, 0, 1),
-                        new Vector4(0, width, 0, 1),
-                        new Vector4(0, 0, height, 1),
-                        new Vector4(depth, 0, height, 1),
-                        new Vector4(depth, width, height, 1),
-                        new Vector4(0, width, height, 1)];
+                        new Vector4(0, 0, depth, 1),
+                        new Vector4(width, 0, depth, 1),
+                        new Vector4(width, 0, 0, 1),
+                        new Vector4(0, height, 0, 1),
+                        new Vector4(0, height, depth, 1),
+                        new Vector4(width, height, depth, 1),
+                        new Vector4(width, height, 0, 1)];
     
     // Asign model edges
     let tempEdges = [[0, 1, 2, 3, 0],
@@ -289,12 +295,16 @@ function calculateCubeVerticesAndEdges(myModel, center, width, height, depth) {
                      [2, 6],
                      [3, 7]];
 
-    // Translate to center
-    let translateMatrix = new Matrix(4, 4);
-    mat4x4Translate(translateMatrix, center.x-(depth/2), center.y-(width/2), center.z-(height/2))
+    // (1) First apply minor translation so that model is centered about its geometry
+    // (2) Then apply animation transformation
+    // (3) Then translate to "center"
+    let translateOne = new Matrix(4, 4);
+    mat4x4Translate(translateOne, -(width/2), -(height/2), -(depth/2))
+    let translateTwo = new Matrix(4, 4);
+    mat4x4Translate(translateTwo, center.x, center.y, center.z)
     for (let i = 0; i < tempVertices.length; i++) {
-        // Vertex translation
-        tempVertices[i] = Matrix.multiply([translateMatrix, tempVertices[i]]);
+        // Vertex rotation and translation
+        tempVertices[i] = Matrix.multiply([translateTwo, myModel.matrix, translateOne, tempVertices[i]]);
     }
 
     // Update model in scene
@@ -303,22 +313,22 @@ function calculateCubeVerticesAndEdges(myModel, center, width, height, depth) {
 }
 
 // Calculate vertices and edges for a cylindrical model
-function calculateCylinderVerticesAndEdges(myModel, center, radius, height, sides) {
+function calculateCylinderVerticesAndEdges(myModel, center, radius, height, sides) { // y height, x and z radius dimension
     // Build model vertices
     let tempEdges = [];
     let tempVertices = [];
     let edgeIndex = 0;
-    for (let z = 0; z < 2; z++) { // Want top and bottom cap (only 2 z slices)
+    for (let y = 0; y < 2; y++) { // Want top and bottom cap (only 2 z slices)
         let capEdges = [];
-        let curZ = z * height;
+        let curY = y * height;
         for (let theta = 0; theta < 360; theta = theta + (360/sides)) {
             let curX = radius * Math.cos(theta*Math.PI/180);
-            let curY = radius * Math.sin(theta*Math.PI/180);
+            let curZ = radius * Math.sin(theta*Math.PI/180);
             tempVertices.push(new Vector4(curX, curY, curZ, 1));
             capEdges.push(edgeIndex);
             edgeIndex++;
         }
-        capEdges.push(z*sides); // Need to make the last connection edge in the ring
+        capEdges.push(y*sides); // Need to make the last connection edge in the ring
         tempEdges.push(capEdges); // While we are here, let's add this polygon to our edge list
     }
 
@@ -327,12 +337,16 @@ function calculateCylinderVerticesAndEdges(myModel, center, radius, height, side
         tempEdges.push([index, index+sides]) // Connecting btm and top caps
     }
 
-    // Translate to center
-    let translateMatrix = new Matrix(4, 4);
-    mat4x4Translate(translateMatrix, center.x-(radius/2), center.y-(radius/2), center.z-(height/2))
+    // (1) First apply minor translation so that model is centered about its geometry
+    // (2) Then apply animation transformation
+    // (3) Then translate to "center"
+    let translateOne = new Matrix(4, 4);
+    mat4x4Translate(translateOne, 0, -(height/2), 0);
+    let translateTwo = new Matrix(4, 4);
+    mat4x4Translate(translateTwo, center.x, center.y, center.z);
     for (let i = 0; i < tempVertices.length; i++) {
-        // Vertex translation
-        tempVertices[i] = Matrix.multiply([translateMatrix, tempVertices[i]]);
+        // Vertex rotation and translation
+        tempVertices[i] = Matrix.multiply([translateTwo, myModel.matrix, translateOne, tempVertices[i]]);
     }
 
     // Update model in scene
@@ -341,17 +355,17 @@ function calculateCylinderVerticesAndEdges(myModel, center, radius, height, side
 }
 
 // Calculate vertices and edges for a conical model
-function calculateConeVerticesAndEdges(myModel, center, radius, height, sides) {
+function calculateConeVerticesAndEdges(myModel, center, radius, height, sides) { // y height, x and z radius dimension
     // Build model vertices
     let tempEdges = [];
     let tempVertices = [];
     let edgeIndex = 1; // Start at 1, reserve 0 for tip
     let baseEdges = [];
-    tempVertices.push(new Vector4(0, 0, height, 1)); // Append tip vertex
+    tempVertices.push(new Vector4(0, height, 0, 1)); // Append tip vertex
     for (let theta = 0; theta < 360; theta = theta + (360/sides)) { // Want only care about bottom cap, as oppossed to cylindrical
         let curX = radius * Math.cos(theta*Math.PI/180);
-        let curY = radius * Math.sin(theta*Math.PI/180);
-        tempVertices.push(new Vector4(curX, curY, 0, 1));
+        let curZ = radius * Math.sin(theta*Math.PI/180);
+        tempVertices.push(new Vector4(curX, 0, curZ, 1));
         tempEdges.push([0, edgeIndex]); // We are connecting base to tip here
         baseEdges.push(edgeIndex); // We are forming base polygon here
         edgeIndex++;
@@ -359,12 +373,16 @@ function calculateConeVerticesAndEdges(myModel, center, radius, height, sides) {
     baseEdges.push(1); // Need to make the last connection edge in the ring
     tempEdges.push(baseEdges); // Add base polygon to edge list
 
-    // Translate to center
-    let translateMatrix = new Matrix(4, 4);
-    mat4x4Translate(translateMatrix, center.x-(radius/2), center.y-(radius/2), center.z-(height/2))
+    // (1) First apply minor translation so that model is centered about its geometry
+    // (2) Then apply animation transformation
+    // (3) Then translate to "center"
+    let translateOne = new Matrix(4, 4);
+    mat4x4Translate(translateOne, 0, -(height/2), 0);
+    let translateTwo = new Matrix(4, 4);
+    mat4x4Translate(translateTwo, center.x, center.y, center.z);
     for (let i = 0; i < tempVertices.length; i++) {
-        // Vertex translation
-        tempVertices[i] = Matrix.multiply([translateMatrix, tempVertices[i]]);
+        // Vertex rotation and translation
+        tempVertices[i] = Matrix.multiply([translateTwo, myModel.matrix, translateOne, tempVertices[i]]);
     }
 
     // Update model in scene
@@ -544,11 +562,10 @@ function onKeyDown(event) {
     n.normalize();
     let u = scene.view.vup.cross(n);
     u.normalize();
-
+    //console.log(u);
     switch (event.keyCode) {
 
         case 37: // LEFT Arrow
-
             console.log("left");
             break;
         case 39: // RIGHT Arrow

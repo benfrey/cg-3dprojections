@@ -445,6 +445,94 @@ function outcodePerspective(vertex, z_min) {
 
 // Clip line - should either return a new line (with two endpoints inside view volume) or null (if line is completely outside view volume)
 function clipLineParallel(line) {
+    let result = null;
+    let p0 = Vector4(line.pt0.x, line.pt0.y, line.pt0.z, line.pt0.w); // end point 0
+    let p1 = Vector4(line.pt1.x, line.pt1.y, line.pt1.z, line.pt1.w); // end point 1
+    let out0 = outcodeParallel(p0);
+    let out1 = outcodeParallel(p1);
+    let repeat = 1;
+    let point_out, out_codeOut;
+
+    // TODO: implement clipping here!
+    while(repeat == 1){
+        if((out0 & out1) != 0){
+            // check if both are outside, to reject TRIVIAL REJECT
+            repeat = 0;
+            //both points are outside the line, reject by returning null
+            return result;
+        }
+        else if((out0 | out1) == 0){       
+            //check if both are inside, to accept TRIVIAL ACCEPT
+            repeat = 0;
+            //both points are inside the line, accept by returning line with same endpoints
+            return {pt0:p0,pt1:p1};
+        } else { // everything else
+            //Select endpoint that lies outside the view rectangle as point_one
+            if(out0 != 000000){
+                point_out = p0;
+                out_codeOut = out0;
+            }
+            else{
+                point_out = p1;
+                out_codeOut = out1;
+            }
+            // find the first bit set to 1 in the selected endpoint's outcode
+            var base2 = (out_codeOut).toString(2);
+            let string_outcode = "" + base2 + "";
+            position = 6 - string_outcode.length;
+
+            // Find parameters
+            //calculate the intersection point between the line and corresponding edge
+            let delta_x =  (p1.x - p0.x);
+            let delta_y = ( p1.y - p0.y);
+            let delta_z = ( p1.z - p0.z);
+
+            if(position == 0){
+                //clip against left edge
+                    b = (point_one.y - ((delta_y/delta_x)*point_one.x));
+                    y = ((delta_y/delta_x)*point_one.x) + b;
+                    newPoint = [-(view.width / 2), y, point_one.z]; //left_edge, y - don't know if these are right */                
+            }
+            else if(position ==1){
+                //clip against right edge
+                b = (point_one.y - ((delta_y/delta_x)*point_one.x));
+                y = ((delta_y/delta_x)*point_one.x) + b;
+                newPoint = [view.width / 2, y, point_one.z]; //left_edge, y - don't know if these are right */
+
+            }
+            else if(position ==2){
+                //clip against bottom edge
+                b = (point_one.y - ((delta_y/delta_x)*point_one.x));
+                x = (point_one.y / (delta_y/delta_x)) - b;
+                newPoint = [x, -(view.height / 2)];//x, bottom_edge - don't know if these are right    
+            }
+            else if(position == 3){
+                //clip against top edge
+                b = (point_one.y - ((delta_y/delta_x)*point_one.x));
+                x = (point_one.y / (delta_y/delta_x)) - b;
+                newPoint = [x, view.height / 2];//x, top_edge - don't know if these are right  
+            }else if(position==4){ //most likely not correct
+                //Far
+                b = (point_one.z - ((delta_z/delta_x)*point_one.x));
+                z = (point_one.z / (delta_z/delta_x)) - b;
+                newPoint = [x, -(view.height / 2)];//x, bottom_edge - don't know if these are right
+            }else if (position == 5){ //need to do
+                //Near 
+            }
+            //replace selected endpoint with this intersection point
+            if(point_one === p0){
+                p0 = newPoint;
+                //recalculate enpoint's outcode
+                out0 = outcodeParallel(p0);
+            }
+            else{
+                p1 = newPoint;
+                //recalculate enpoint's outcode
+                out1 = outcodeParallel(p1);
+            }
+            //try to accept/reject again (repeat process)
+        }
+    }
    
 }
 

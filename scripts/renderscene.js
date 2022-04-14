@@ -215,28 +215,25 @@ function drawScene() {
                 let line = {pt0:vertex_zero,pt1:vertex_one};
                 let clippedLine;
                 if (scene.view.type == "perspective") {
-
-                     clippedLine = clipLinePerspective(line,-scene.view.clip[4]/scene.view.clip[5]);
+                    clippedLine = clipLinePerspective(line,-scene.view.clip[4]/scene.view.clip[5]);
                 } else if (scene.view.type == "parallel") {
-
-                     clippedLine = clipLineParallel(line);
-                    console.log("You made it my little kitten");
+                    clippedLine = clipLineParallel(line);
                 } else {
                     console.log("Error on scene projection")
                 }
-               // let line = {pt0:vertex_zero,pt1:vertex_one};
+                // let line = {pt0:vertex_zero,pt1:vertex_one};
                 //let clippedLine = clipLinePerspective(line,-scene.view.clip[4]/scene.view.clip[5]);
 
                 if(clippedLine != null){
                     //Step 3 project clipped lines into 2D and scale to match screen coordinates
                     let project_vertZero = Matrix.multiply([projectView,clippedLine.pt0]);
                     let project_vertOne = Matrix.multiply([projectView,clippedLine.pt1]);
-                    console.log(project_vertZero);
-                    console.log(clippedLine);
+                    //console.log(project_vertZero);
+                    //console.log(clippedLine);
                     vec4NonHomogeneous(project_vertZero);
                     vec4NonHomogeneous(project_vertOne);
                     drawLine(project_vertZero.x, project_vertZero.y, project_vertOne.x, project_vertOne.y);
-                    console.log("scene has been drawn");
+                    //console.log("scene has been drawn");
                 }
             }
         }
@@ -660,64 +657,31 @@ function onKeyDown(event) {
     let u = scene.view.vup.cross(n);
     u.normalize();
     let v = n.cross(u);
+    v.normalize();
 
-    let theta = 1/4 * Math.PI/180;
+    let theta = 5 * Math.PI/180; // 5 degrees
     let transformView = new Matrix(4, 4);
     let newSRP = new Vector4(scene.view.srp.x, scene.view.srp.y, scene.view.srp.z, 1);
 
-    //let v_norm = v;
-    //v_norm.normalize();
-    //console.log(v);
-
-    //console.log("v vector: ");
-    //console.log(v);
-
-    //console.log(u);
     switch (event.keyCode) {
-
         case 37: // LEFT Arrow
-
-            //transformView = new Matrix(4, 4);
+            // Rotate about v (at scene.view.prp) through angle theta
             transformView = mat4x4SwingSRP(v, scene.view.prp, theta);
-            console.log(newSRP);
             newSRP = Matrix.multiply([transformView, newSRP]);
-            console.log(newSRP);
 
+            // Update scene
             scene.view.srp.x = newSRP.x;
             scene.view.srp.y = newSRP.y;
             scene.view.srp.z = newSRP.z;
 
-            /*
-            // We want to swing SRP to the left by 20 deg, so we have positive theta about v according to right hand rule (RHR)
-            let theta = 180 + (20 * Math.PI/180);
-
-            // Call Rodrigues' rotation formula
-            let a = n; // Vector that gets rotated about b
-            let b = v;
-            b.normalize(); // Vector that gets rotated about
-            //console.log(a);
-            //console.log(b);
-            let a_rot = rodriguesRotFormula(a, b, theta); // Find rotated vec a
-
-            //console.log(a_rot);
-            // Now that we have the rotated vector, we can work backwards to find new SRP
-            //let srp_rot = a_rot.scale(scene.view.prp.subtract(scene.view.srp).magnitude()).subtract(scene.view.prp);
-
-            //console.log(srp_rot);
-            // Update SRP
-            //scene.view.srp = srp_rot;
-
-            */
             console.log("Left");
             break;
         case 39: // RIGHT Arrow
-
-            //transformView = new Matrix(4, 4);
+            // Rotate about v (at scene.view.prp) through angle -theta
             transformView = mat4x4SwingSRP(v, scene.view.prp, -theta);
-            console.log(newSRP);
             newSRP = Matrix.multiply([transformView, newSRP]);
-            console.log(newSRP);
 
+            // Update scene
             scene.view.srp.x = newSRP.x;
             scene.view.srp.y = newSRP.y;
             scene.view.srp.z = newSRP.z;

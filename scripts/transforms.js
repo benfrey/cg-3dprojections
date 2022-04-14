@@ -33,18 +33,18 @@ mat4x4ShearXY(shearMatrix, -dop.x/dop.z, -dop.y/dop.z);
     let translateClippingMatrix = new Matrix(4, 4);
     mat4x4Translate(translateClippingMatrix, 0, 0, clip[4]);
     //console.log("Here 4")
-    console.log(translateClippingMatrix);
+    //console.log(translateClippingMatrix);
 
     // 5. scale such that view volume bounds are ([-1,1], [-1,1], [-1,0]) (see slide 13 of lecture 09)
     let scaleMatrix = new Matrix(4,4);
     mat4x4Scale(scaleMatrix,2/(clip[1]-clip[0]),2/(clip[3]-clip[2]),1/clip[5]);
     //console.log("Here 5")
-    console.log(scaleMatrix);
+    //console.log(scaleMatrix);
 
     // Final transformation by multiplying matrices through (see slide 14 of lecture 09)
     //let transform = Matrix.multiply([translationMatrix, rotationMatrix, shearMatrix, translateClippingMatrix, scaleMatrix]);
     let transform = Matrix.multiply([scaleMatrix, translateClippingMatrix, shearMatrix, rotationMatrix, translationMatrix]);
-    console.log(transform);
+    //console.log(transform);
     return transform;
 }
 
@@ -192,17 +192,17 @@ function vec4NonHomogeneous(vec4) {
 // set values of existing 4x4 matrix in order to transform SRP about PRP
 function mat4x4SwingSRP(rotAxisVec, PRP, theta) {
     let u = rotAxisVec.x;
-    let v = rotAxisVec.y;
-    let w = rotAxisVec.z;
+    let v = rotAxisVec.z;
+    let w = rotAxisVec.y;
 
     let a = PRP.x;
     let b = PRP.y;
     let c = PRP.z;
-    
+
     let outMat = new Matrix(4, 4);
-    outMat.values = [[u^2+(v^2+w^2)*Math.cos(theta), u*v*(1-Math.cos(theta))-w*Math.sin(theta), u*w*(1-Math.cos(theta))+v*Math.sin(theta), (a*(v^2+w^2)-u*(b*v+c*w))*(1-Math.cos(theta))+(b*w-c*v)*Math.sin(theta)],
-                     [u*v*(1-Math.cos(theta))+w*Math.sin(theta), v^2+(u^2+w^2)*Math.cos(theta), v*w*(1-Math.cos(theta))-u*Math.sin(theta), (b*(u^2+w^2)-v*(a*u+c*w))*(1-Math.cos(theta))+(c*u-a*w)*Math.sin(theta)],
-                     [u*w*(1-Math.cos(theta))-v*Math.sin(theta), v*w*(1-Math.cos(theta))+u*Math.sin(theta), w^2+(u^2+v^2)*Math.cos(theta), (c*(u^2+v^2)-w*(a*u+b*v))*(1-Math.cos(theta))+(a*v-b*u)*Math.sin(theta)],
+    outMat.values = [[Math.pow(u,2)+(Math.pow(v,2)+Math.pow(w,2))*Math.cos(theta), u*v*(1-Math.cos(theta))-w*Math.sin(theta), u*w*(1-Math.cos(theta))+v*Math.sin(theta), (a*(Math.pow(v,2)+Math.pow(w,2))-u*(b*v+c*w))*(1-Math.cos(theta))+(b*w-c*v)*Math.sin(theta)],
+                     [u*v*(1-Math.cos(theta))+w*Math.sin(theta), Math.pow(v,2)+(Math.pow(u,2)+Math.pow(w,2))*Math.cos(theta), v*w*(1-Math.cos(theta))-u*Math.sin(theta), (b*(Math.pow(u,2)+Math.pow(w,2))-v*(a*u+c*w))*(1-Math.cos(theta))+(c*u-a*w)*Math.sin(theta)],
+                     [u*w*(1-Math.cos(theta))-v*Math.sin(theta), v*w*(1-Math.cos(theta))+u*Math.sin(theta), Math.pow(w,2)+(Math.pow(u,2)+Math.pow(v,2))*Math.cos(theta), (c*(Math.pow(u,2)+Math.pow(v,2))-w*(a*u+b*v))*(1-Math.cos(theta))+(a*v-b*u)*Math.sin(theta)],
                      [0, 0, 0, 1]];
 
     return outMat;

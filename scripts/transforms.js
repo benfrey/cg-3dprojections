@@ -189,6 +189,25 @@ function vec4NonHomogeneous(vec4) {
     vec4.values = [vec4.x/vec4.w, vec4.y/vec4.w, vec4.z/vec4.w, vec4.w];
 }
 
+// set values of existing 4x4 matrix in order to transform SRP about PRP
+function mat4x4SwingSRP(rotAxisVec, PRP, theta) {
+    let u = rotAxisVec.x;
+    let v = rotAxisVec.y;
+    let w = rotAxisVec.z;
+
+    let a = PRP.x;
+    let b = PRP.y;
+    let c = PRP.z;
+    
+    let outMat = new Matrix(4, 4);
+    outMat.values = [[u^2+(v^2+w^2)*Math.cos(theta), u*v*(1-Math.cos(theta))-w*Math.sin(theta), u*w*(1-Math.cos(theta))+v*Math.sin(theta), (a*(v^2+w^2)-u*(b*v+c*w))*(1-Math.cos(theta))+(b*w-c*v)*Math.sin(theta)],
+                     [u*v*(1-Math.cos(theta))+w*Math.sin(theta), v^2+(u^2+w^2)*Math.cos(theta), v*w*(1-Math.cos(theta))-u*Math.sin(theta), (b*(u^2+w^2)-v*(a*u+c*w))*(1-Math.cos(theta))+(c*u-a*w)*Math.sin(theta)],
+                     [u*w*(1-Math.cos(theta))-v*Math.sin(theta), v*w*(1-Math.cos(theta))+u*Math.sin(theta), w^2+(u^2+v^2)*Math.cos(theta), (c*(u^2+v^2)-w*(a*u+b*v))*(1-Math.cos(theta))+(a*v-b*u)*Math.sin(theta)],
+                     [0, 0, 0, 1]];
+
+    return outMat;
+}
+
 // create a new 3-component vector with values x,y,z
 function Vector3(x, y, z) {
     let vec3 = new Vector(3);

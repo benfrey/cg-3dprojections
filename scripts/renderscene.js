@@ -91,7 +91,7 @@ function init() {
             }
         ]
     };
-    
+
     // Calculate vertices for non-generic models
     //calculateVerticesAndEdges();
 
@@ -111,13 +111,13 @@ function animate(timestamp) {
     // step 1: calculate time (time since start)
     let time = timestamp - start_time;
 
-    //For animating by time, it’s probably easiest to explain with an example. Say that I want to have my model take 2 seconds to rotate once. 
-    // Given a typical monitor with a 60 Hz refresh rate, this would mean incrementing the rotation angle by 3 degrees each frame (360 degrees / 120 frames in 2 seconds). 
-    // However, if we made this assumption, then someone using a monitor with a faster or slower refresh rate would see the animation going much faster or slower than desired. 
-    // Therefore, you should calculate how much to rotate the model based on how much time has passed. 
+    //For animating by time, it’s probably easiest to explain with an example. Say that I want to have my model take 2 seconds to rotate once.
+    // Given a typical monitor with a 60 Hz refresh rate, this would mean incrementing the rotation angle by 3 degrees each frame (360 degrees / 120 frames in 2 seconds).
+    // However, if we made this assumption, then someone using a monitor with a faster or slower refresh rate would see the animation going much faster or slower than desired.
+    // Therefore, you should calculate how much to rotate the model based on how much time has passed.
     // If someone has a faster refresh rate on their monitor, then less time would have passed since the previous frame and we should not rotate quite as much.
     // step 2: transform models based on time
-    
+
     // We will need to find a theta based on the rps of a model and the current time
     //console.log(time % 100);
 
@@ -128,38 +128,26 @@ function animate(timestamp) {
     // limit refresh
     for (let i = 0; i < scene.models.length; i++) {
         // If model has animation property, we need to rotate it about the specified axis by theta degrees specified by our rotations per second (rps) and time.
-        // More exactly. We are trying to determining how many revolutions have occured (i.e. theta [radians]) = rps [rev/s] x time [ms] x [2 pi rad / rev] * [1 s / 1000 ms]. 
+        // More exactly. We are trying to determining how many revolutions have occured (i.e. theta [radians]) = rps [rev/s] x time [ms] x [2 pi rad / rev] * [1 s / 1000 ms].
         // This theta value is used in a trig function (within our rotation transformation matrices), and all trig functions are periodic.
         if (scene.models[i].animation != null) {
-            // Calculate theta
+            // Calculate theta (see above)
             let theta = scene.models[i].animation.rps * time * 2 * Math.PI / 1000;
-            
-            // Hardcode small theta for now
-            //let theta = time;
 
             // Declare animation matrix
             let animationMatrix = new Matrix(4, 4);
 
             // Determine axis of rotation
             if (scene.models[i].animation.axis == "x") {
-                console.log("Rotate X");
                 mat4x4RotateX(animationMatrix, theta);
             } else if (scene.models[i].animation.axis == "y") {
-                console.log("Rotate Y");
                 mat4x4RotateY(animationMatrix, theta);
             } else if (scene.models[i].animation.axis == "z") {
-                console.log("Rotate Z");
                 mat4x4RotateZ(animationMatrix, theta);
             }
 
             // Add animation matrix as property of model
             scene.models[i]['matrix'] = animationMatrix;
-
-            //Transform the model vertices here. Maybe this should be in draw scene but I didn't want to have to store matrix somewhere.
-            /*for (let k = 0; k < scene.models[i].vertices.length; ++k){
-                // new list stores vertex locations within the connical view 
-                scene.models[i].vertices[k] = Matrix.multiply([animationMatrix,scene.models[i].vertices[k]]);
-            }*/
         }
     }
 
@@ -177,8 +165,8 @@ function animate(timestamp) {
 
 // Main drawing code - use information contained in variable `scene`
 function drawScene() {
-    console.log(scene);
-    
+    //console.log(scene);
+
     // Create view matrix
     let transformView;
     if (scene.view.type == "perspective") {
@@ -192,7 +180,7 @@ function drawScene() {
     // Create projection matrix and scale to window
     let projectView;
     let windowView = new Matrix(4, 4);
-    mat4x4WindowProjection(windowView, view.width, view.height); 
+    mat4x4WindowProjection(windowView, view.width, view.height);
     if (scene.view.type == "perspective") {
         projectView = Matrix.multiply([windowView,mat4x4MPer() ]);
     } else if (scene.view.type == "parallel") {
@@ -206,12 +194,12 @@ function drawScene() {
         // Step 0 apply animation based on time to each model vertex
         // Step 1 transform all verts into the connical view volume
         // Step 2 clip all lines against the connonical view volume
-        // Step 3 project clipped lines into 2D and scale to match screen coordinates 
+        // Step 3 project clipped lines into 2D and scale to match screen coordinates
     for (let k = 0; k < scene.models.length; k++) {
         //Step 1 transform all verts into the connical view volume
         let transform_vert = [];
         for(let i=0;i<scene.models[k].vertices.length;++i){
-            // new list stores vertex locations within the connical view 
+            // new list stores vertex locations within the connical view
             transform_vert.push(Matrix.multiply([transformView,scene.models[k].vertices[i]]));
         }
 
@@ -223,25 +211,25 @@ function drawScene() {
                 let index_one = edge[j+1];
                 let vertex_zero = transform_vert[index_zero];
                 let vertex_one = transform_vert[index_one];
-                
+
                 //Step 2 clip all lines against the connonical view volume
                 let line = {pt0:vertex_zero,pt1:vertex_one};
                 let clippedLine;
                 if (scene.view.type == "perspective") {
-                
+
                      clippedLine = clipLinePerspective(line,-scene.view.clip[4]/scene.view.clip[5]);
                 } else if (scene.view.type == "parallel") {
-                
+
                      clippedLine = clipLineParallel(line);
                     console.log("You made it my little kitten");
                 } else {
                     console.log("Error on scene projection")
-                } 
+                }
                // let line = {pt0:vertex_zero,pt1:vertex_one};
                 //let clippedLine = clipLinePerspective(line,-scene.view.clip[4]/scene.view.clip[5]);
-                
+
                 if(clippedLine != null){
-                    //Step 3 project clipped lines into 2D and scale to match screen coordinates 
+                    //Step 3 project clipped lines into 2D and scale to match screen coordinates
                     let project_vertZero = Matrix.multiply([projectView,clippedLine.pt0]);
                     let project_vertOne = Matrix.multiply([projectView,clippedLine.pt1]);
                     console.log(project_vertZero);
@@ -259,34 +247,34 @@ function drawScene() {
 // Calculate vertices and edges for models loaded in
 function calculateVerticesAndEdges() {
     //console.log(scene);
-    
+
     // Go through each model in our scene
-    for (let i = 0; i < scene.models.length; i++) {        
+    for (let i = 0; i < scene.models.length; i++) {
         // Check model type, this will indicate if vertices and edges need to be calculated
         if (scene.models[i].type === 'generic') {
             // We have generic model
-            
+
             // Do nothing, generic models already have vertices and edges
         } else if (scene.models[i].type === 'cube') {
             // We have a cube
 
-            // Given a model, append vertex and edge arrays based on center, width, height, and depth 
-            calculateCubeVerticesAndEdges(scene.models[i], scene.models[i].center, scene.models[i].width, scene.models[i].height, scene.models[i].depth); 
+            // Given a model, append vertex and edge arrays based on center, width, height, and depth
+            calculateCubeVerticesAndEdges(scene.models[i], scene.models[i].center, scene.models[i].width, scene.models[i].height, scene.models[i].depth);
         } else if (scene.models[i].type === 'cone') {
             // We have a cone
 
-            // Given a model, append vertex and edge arrays based on center, radius, height, and sides 
-            calculateConeVerticesAndEdges(scene.models[i], scene.models[i].center, scene.models[i].radius, scene.models[i].height, scene.models[i].sides); 
+            // Given a model, append vertex and edge arrays based on center, radius, height, and sides
+            calculateConeVerticesAndEdges(scene.models[i], scene.models[i].center, scene.models[i].radius, scene.models[i].height, scene.models[i].sides);
         } else if (scene.models[i].type === 'cylinder') {
             // We have a cylinder
 
-            // Given a model, append vertex and edge arrays based on center, radius, height, and sides 
-            calculateCylinderVerticesAndEdges(scene.models[i], scene.models[i].center, scene.models[i].radius, scene.models[i].height, scene.models[i].sides); 
+            // Given a model, append vertex and edge arrays based on center, radius, height, and sides
+            calculateCylinderVerticesAndEdges(scene.models[i], scene.models[i].center, scene.models[i].radius, scene.models[i].height, scene.models[i].sides);
         } else if (scene.models[i].type === 'sphere') {
             // We have a sphere
 
-            // Given a model, append vertex and edge arrays based on center, radius, slices, and stacks 
-            calculateSphereVerticesAndEdges(scene.models[i], scene.models[i].center, scene.models[i].radius, scene.models[i].slices, scene.models[i].stacks); 
+            // Given a model, append vertex and edge arrays based on center, radius, slices, and stacks
+            calculateSphereVerticesAndEdges(scene.models[i], scene.models[i].center, scene.models[i].radius, scene.models[i].slices, scene.models[i].stacks);
         }
     }
 }
@@ -302,7 +290,7 @@ function calculateCubeVerticesAndEdges(myModel, center, width, height, depth) { 
                         new Vector4(0, height, depth, 1),
                         new Vector4(width, height, depth, 1),
                         new Vector4(width, height, 0, 1)];
-    
+
     // Asign model edges
     let tempEdges = [[0, 1, 2, 3, 0],
                      [4, 5, 6, 7, 4],
@@ -477,7 +465,7 @@ function clipLineParallel(line) {
             //both points are outside the line, reject by returning null
             return result;
         }
-        else if((out0 | out1) == 0){       
+        else if((out0 | out1) == 0){
             //check if both are inside, to accept TRIVIAL ACCEPT
             repeat = 0;
             //both points are inside the line, accept by returning line with same endpoints
@@ -507,7 +495,7 @@ function clipLineParallel(line) {
                 //clip against left edge
                     b = (point_one.y - ((delta_y/delta_x)*point_one.x));
                     y = ((delta_y/delta_x)*point_one.x) + b;
-                    newPoint = [-(view.width / 2), y, point_one.z]; //left_edge, y - don't know if these are right */                
+                    newPoint = [-(view.width / 2), y, point_one.z]; //left_edge, y - don't know if these are right */
             }
             else if(position ==1){
                 //clip against right edge
@@ -520,20 +508,20 @@ function clipLineParallel(line) {
                 //clip against bottom edge
                 b = (point_out.y - ((delta_y/delta_x)*point_out.x));
                 x = (point_out.y / (delta_y/delta_x)) - b;
-                newPoint = [x, -(view.height / 2)];//x, bottom_edge - don't know if these are right    
+                newPoint = [x, -(view.height / 2)];//x, bottom_edge - don't know if these are right
             }
             else if(position == 3){
                 //clip against top edge
                 b = (point_out.y - ((delta_y/delta_x)*point_out.x));
                 x = (point_out.y / (delta_y/delta_x)) - b;
-                newPoint = [x, view.height / 2];//x, top_edge - don't know if these are right  
+                newPoint = [x, view.height / 2];//x, top_edge - don't know if these are right
             }else if(position==4){ //most likely not correct
                 //Far
                 b = (point_out.z - ((delta_z/delta_x)*point_out.x));
                 z = (point_out.z / (delta_z/delta_x)) - b;
                 newPoint = [x, -(view.height / 2)];//x, bottom_edge - don't know if these are right
             }else if (position == 5){ //need to do
-                //Near 
+                //Near
             }
             //replace selected endpoint with this intersection point
             if(point_out === p0){
@@ -549,7 +537,7 @@ function clipLineParallel(line) {
             //try to accept/reject again (repeat process)
         }
     }
-   
+
 }
 
 // Clip line - should either return a new line (with two endpoints inside view volume) or null (if line is completely outside view volume)
@@ -573,8 +561,8 @@ function clipLinePerspective(line, z_min) {
             //both points are outside the line, reject by returning null
             return result;
         }
-        else if((out0 | out1) == 0){  
-            //console.log("accept");       
+        else if((out0 | out1) == 0){
+            //console.log("accept");
             //check if both are inside, to accept TRIVIAL ACCEPT
             repeat = 0;
 
@@ -603,8 +591,8 @@ function clipLinePerspective(line, z_min) {
             //console.log("outcode_point: " + outcode_point);
             //console.log(base2);
             let string_outcode = "" + base2 + "";
-           // console.log("here"+string_outcode); //add zeros to the left 
-           
+           // console.log("here"+string_outcode); //add zeros to the left
+
             position = 6 - string_outcode.length;
 
             //console.log("position: " + position);
@@ -640,20 +628,20 @@ function clipLinePerspective(line, z_min) {
 
             // Replace selected endpoint with this intersection point
             if(out_codeOut === out0){
-               
+
                 p0 = new_point;
                 // Recalculate enpoint's outcode
                 out0 = outcodePerspective(p0);
-                
+
             }
             else{
-               
+
                 p1 = new_point;
-                
+
                 //recalculate enpoint's outcode
                 out1 = outcodePerspective(p1);
-                
-            }   
+
+            }
         }
     }
     //return {pt0:p0,pt1:p1}; // return the clipped line
@@ -661,43 +649,146 @@ function clipLinePerspective(line, z_min) {
 
 // Called when user presses a key on the keyboard down
 function onKeyDown(event) {
-    
+    /*
+    let n = scene.view.prp.subtract(scene.view.srp);
+    n.normalize();
+    let u = scene.view.vup.cross(n);
+    u.normalize();
+    */
+
     let n = scene.view.prp.subtract(scene.view.srp);
     n.normalize();
     let u = scene.view.vup.cross(n);
     u.normalize();
     let v = n.cross(u);
+
+    let theta = 1/4 * Math.PI/180;
+    let transformView = new Matrix(4, 4);
+    let newSRP = new Vector4(scene.view.srp.x, scene.view.srp.y, scene.view.srp.z, 1);
+
+    //let v_norm = v;
+    //v_norm.normalize();
+    //console.log(v);
+
+    //console.log("v vector: ");
+    //console.log(v);
+
     //console.log(u);
     switch (event.keyCode) {
 
         case 37: // LEFT Arrow
-            console.log("left");
+
+            //transformView = new Matrix(4, 4);
+            transformView = mat4x4SwingSRP(v, scene.view.prp, theta);
+            console.log(newSRP);
+            newSRP = Matrix.multiply([transformView, newSRP]);
+            console.log(newSRP);
+
+            scene.view.srp.x = newSRP.x;
+            scene.view.srp.y = newSRP.y;
+            scene.view.srp.z = newSRP.z;
+
+            /*
+            // We want to swing SRP to the left by 20 deg, so we have positive theta about v according to right hand rule (RHR)
+            let theta = 180 + (20 * Math.PI/180);
+
+            // Call Rodrigues' rotation formula
+            let a = n; // Vector that gets rotated about b
+            let b = v;
+            b.normalize(); // Vector that gets rotated about
+            //console.log(a);
+            //console.log(b);
+            let a_rot = rodriguesRotFormula(a, b, theta); // Find rotated vec a
+
+            //console.log(a_rot);
+            // Now that we have the rotated vector, we can work backwards to find new SRP
+            //let srp_rot = a_rot.scale(scene.view.prp.subtract(scene.view.srp).magnitude()).subtract(scene.view.prp);
+
+            //console.log(srp_rot);
+            // Update SRP
+            //scene.view.srp = srp_rot;
+
+            */
+            console.log("Left");
             break;
         case 39: // RIGHT Arrow
-            console.log("right");
+
+            //transformView = new Matrix(4, 4);
+            transformView = mat4x4SwingSRP(v, scene.view.prp, -theta);
+            console.log(newSRP);
+            newSRP = Matrix.multiply([transformView, newSRP]);
+            console.log(newSRP);
+
+            scene.view.srp.x = newSRP.x;
+            scene.view.srp.y = newSRP.y;
+            scene.view.srp.z = newSRP.z;
+
+            console.log("Right");
             break;
         case 65: // A key
-        scene.view.prp = u.add(scene.view.prp);
-        scene.view.srp = u.add(scene.view.srp);
+            scene.view.prp = scene.view.prp.add(u);
+            scene.view.srp = scene.view.srp.add(u);
             console.log("A");
             break;
         case 68: // D key
-        scene.view.prp = scene.view.prp.subtract(u);
-        scene.view.srp = scene.view.srp.subtract(u);
+            scene.view.prp = scene.view.prp.subtract(u);
+            scene.view.srp = scene.view.srp.subtract(u);
             console.log("D");
             break;
         case 83: // S key
-        scene.view.prp = n.add(scene.view.prp);
-        scene.view.srp = n.add(scene.view.srp);
+            scene.view.prp = scene.view.prp.subtract(n);
+            scene.view.srp = scene.view.srp.subtract(n);
             console.log("S");
             break;
         case 87: // W key
-        scene.view.prp = scene.view.prp.subtract(n);
-        scene.view.srp = scene.view.srp.subtract(n);
+            scene.view.prp = scene.view.prp.add(n);
+            scene.view.srp = scene.view.srp.add(n);
             console.log("W");
             break;
     }
 }
+
+/*
+// Rodrigues rotation formula based on: https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
+function rodriguesRotFormula(a, b, theta) {
+    // Copy to ensure we are not changing values
+    let a_copy1 = new Vector3(a.x, a.y, a.z);
+    let a_copy2 = new Vector3(a.x, a.y, a.z);
+    let a_copy3 = new Vector3(a.x, a.y, a.z);
+
+    let b_copy1 = new Vector3(b.x, b.y, b.z);
+    let b_copy2 = new Vector3(b.x, b.y, b.z);
+    let b_copy3 = new Vector3(b.x, b.y, b.z);
+
+    // Sorry in advance for this mess. It took me a long time to figure out the matrix.js file for
+    // vector creation and variable instance handling. I feel confident in my Computer Graphics
+    // and math understanding of the problem, but trying to learn the matrix.js vector return
+    // types really took a lot of time.
+
+    // Part one
+    a_copy1.scale((Math.cos(theta)));
+    let partOne = a_copy1
+    console.log(partOne);
+
+    // Part two
+    let temp = b.cross(a);
+    temp.scale(Math.sin(theta));
+    let partTwo = temp;
+    console.log(partTwo);
+
+    // Parth
+    let temp2 = b.dot(a);
+    b_copy1.scale(temp2*(1-Math.cos(theta)));
+    let partThree = b_copy1;
+    console.log(partThree);
+
+    let outVec = partOne.add(partTwo);
+    let outVecFinal = outVec.add(partThree);
+
+    console.log(outVecFinal);
+    //return partOne+partTwo+partThree;
+}
+*/
 
 ///////////////////////////////////////////////////////////////////////////
 // No need to edit functions beyond this point

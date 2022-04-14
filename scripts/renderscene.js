@@ -24,7 +24,7 @@ function init() {
     // initial scene... feel free to change this
     scene = {
         view: {
-            type: 'parallel',
+            type: 'perspective',
             prp: Vector3(44, 20, -16),
             srp: Vector3(20, 20, -40),
             vup: Vector3(0, 1, 0),
@@ -434,8 +434,8 @@ function calculateSphereVerticesAndEdges(myModel, center, radius, sectorCount, s
             
             curEdges.push(edgeIndex); // We are building a ring for a single stack here
             
-            if (i < stackCount && i > 1) { // We don't want to build connections past last stack (does not exist)
-                tempEdges.push([i*j, i*j+sectorCount+1]);     // We are building connection between different stacks here
+            if (i > 0) { // We don't want to build connections past last stack (does not exist)
+                tempEdges.push([edgeIndex, edgeIndex-(sectorCount+1)]);     // We are building connection between different stacks here
             }
 
             edgeIndex++;

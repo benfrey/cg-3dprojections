@@ -24,7 +24,7 @@ function init() {
     // initial scene... feel free to change this
     scene = {
         view: {
-            type: 'perspective',
+            type: 'parallel',
             prp: Vector3(44, 20, -16),
             srp: Vector3(20, 20, -40),
             vup: Vector3(0, 1, 0),
@@ -221,8 +221,6 @@ function drawScene() {
                 } else {
                     console.log("Error on scene projection")
                 }
-                // let line = {pt0:vertex_zero,pt1:vertex_one};
-                //let clippedLine = clipLinePerspective(line,-scene.view.clip[4]/scene.view.clip[5]);
 
                 if(clippedLine != null){
                     //Step 3 project clipped lines into 2D and scale to match screen coordinates
@@ -523,7 +521,7 @@ function clipLineParallel(line) {
                console.log("Yay!");
                 p0 = new_point;
                 // Recalculate enpoint's outcode
-                out0 = outcodePerspective(p0);
+                out0 = outcodeParallel(p0);
                 
             }
             else{
@@ -531,7 +529,7 @@ function clipLineParallel(line) {
                 p1 = new_point;
                 
                 //recalculate enpoint's outcode
-                out1 = outcodePerspective(p1);
+                out1 = outcodeParallel(p1);
                 
             } 
             //try to accept/reject again (repeat process)

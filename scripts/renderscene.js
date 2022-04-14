@@ -447,8 +447,14 @@ function outcodePerspective(vertex, z_min) {
 function clipLineParallel(line) {
     let result = null;
     let p0 = Vector4(line.pt0.x, line.pt0.y, line.pt0.z, line.pt0.w); // end point 0
-    let p1 = Vector4(line.pt1.x, line.pt1.y, line.pt1.z, line.pt1.w); // end point 1
-    let out0 = outcodeParallel(p0);
+    let p1 = Vector4(line.pt1.x, line.pt1.y, line.pt1.z, line.pt1.w); // end point 
+    let b;
+    let y;
+    let x;
+    let z;
+    let t;
+    let new_point;
+     let out0 = outcodeParallel(p0);
     let out1 = outcodeParallel(p1);
     let repeat = 1;
     let point_out, out_codeOut;
@@ -461,10 +467,14 @@ function clipLineParallel(line) {
             //both points are outside the line, reject by returning null
             return result;
         }
-        else if((out0 | out1) == 0){
+        else if((out0 | out1) == 0){       
             //check if both are inside, to accept TRIVIAL ACCEPT
             repeat = 0;
             //both points are inside the line, accept by returning line with same endpoints
+            console.log("passed");
+            console.log(p0);
+            console.log("p1 is ");
+            console.log(p1);
             return {pt0:p0,pt1:p1};
         } else { // everything else
             //Select endpoint that lies outside the view rectangle as point_one
@@ -486,50 +496,44 @@ function clipLineParallel(line) {
             let delta_x =  (p1.x - p0.x);
             let delta_y = ( p1.y - p0.y);
             let delta_z = ( p1.z - p0.z);
+            let t;
+            //((1-t)*value0)+(t*value1)
+            if(position == 0) { 
+                //t = (-1-x0)/delta_x
+                t = (-1-p0.x)/delta_x;
+            } else if(position == 1) {
+                t = (1-p0.x)/delta_x;;//(p0.x + p0.z)/(-delta_x-delta_z);
+            } else if(position == 2) {
+                t = (-1-p0.y)/delta_y;//(-p0.y + p0.z)/(delta_y-delta_z);
+            } else if (position == 3) {
+                t = (1-p0.y)/delta_y;//(p0.y + p0.z)/(-delta_y-delta_z);
+            } else if (position == 4) {
+                t = (-p0.z-1)/delta_z;//(-p0.z - 1)/(delta_z);
+            } else if (position == 5) {
+                t = -p0.z/delta_z;//(-p0.z + z_min)/(-delta_z);
+            }
 
-            if(position == 0){
-                //clip against left edge
-                    b = (point_one.y - ((delta_y/delta_x)*point_one.x));
-                    y = ((delta_y/delta_x)*point_one.x) + b;
-                    newPoint = [-(view.width / 2), y, point_one.z]; //left_edge, y - don't know if these are right */
-            }
-            else if(position ==1){
-                //clip against right edge
-                b = (point_one.y - ((delta_y/delta_x)*point_one.x));
-                y = ((delta_y/delta_x)*point_one.x) + b;
-                newPoint = [view.width / 2, y, point_one.z]; //left_edge, y - don't know if these are right */
-
-            }
-            else if(position ==2){
-                //clip against bottom edge
-                b = (point_out.y - ((delta_y/delta_x)*point_out.x));
-                x = (point_out.y / (delta_y/delta_x)) - b;
-                newPoint = [x, -(view.height / 2)];//x, bottom_edge - don't know if these are right
-            }
-            else if(position == 3){
-                //clip against top edge
-                b = (point_out.y - ((delta_y/delta_x)*point_out.x));
-                x = (point_out.y / (delta_y/delta_x)) - b;
-                newPoint = [x, view.height / 2];//x, top_edge - don't know if these are right
-            }else if(position==4){ //most likely not correct
-                //Far
-                b = (point_out.z - ((delta_z/delta_x)*point_out.x));
-                z = (point_out.z / (delta_z/delta_x)) - b;
-                newPoint = [x, -(view.height / 2)];//x, bottom_edge - don't know if these are right
-            }else if (position == 5){ //need to do
-                //Near
-            }
+            // Use parametric equations to find new components
+            let new_pointx = (1-t)*p0.x+t*p1.x;
+            let new_pointy = (1-t)*p0.y+t*p1.y;
+            let new_pointz = (1-t)*p0.z+t*p1.z;
+            let new_point = Vector4(new_pointx,new_pointy,new_pointz,1);
             //replace selected endpoint with this intersection point
-            if(point_out === p0){
-                p0 = newPoint;
-                //recalculate enpoint's outcode
-                out0 = outcodeParallel(p0);
+            if(out_codeOut === out0){
+               console.log("Yay!");
+                p0 = new_point;
+                // Recalculate enpoint's outcode
+                out0 = outcodePerspective(p0);
+                
             }
             else{
-                p1 = newPoint;
+                
+                p1 = new_point;
+                
                 //recalculate enpoint's outcode
-                out1 = outcodeParallel(p1);
-            }
+                out1 = outcodePerspective(p1);
+                
+            } 
             //try to accept/reject again (repeat process)
         }
     }

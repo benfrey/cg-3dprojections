@@ -88,6 +88,17 @@ function init() {
                     axis: "y",
                     rps: 0.5
                 }
+            },
+            {
+                type: "sphere",
+                center: Vector4(8, 6, -5, 1),
+                radius: 4,
+                slices: 12,
+                stacks: 8,
+                animation: {
+                    axis: "y",
+                    rps: 0.1
+                }
             }
         ]
     };
@@ -106,7 +117,7 @@ function init() {
 
 // Animation loop - repeatedly calls rendering code
 function animate(timestamp) {
-    //console.log(scene);
+    console.log(scene);
     ctx.clearRect(0, 0, view.width, view.height);
     // step 1: calculate time (time since start)
     let time = timestamp - start_time;
@@ -389,8 +400,68 @@ function calculateConeVerticesAndEdges(myModel, center, radius, height, sides) {
 }
 
 // Calculate vertices and edges for a spherical model
-function calculateSphereVerticesAndEdges(myModel, center, radius, slices, stacks) { // think of slices as longitude lines, stacks as latitude lines
-    // Implement later
+function calculateSphereVerticesAndEdges(myModel, center, radius, sectorCount, stackCount) { // think of slices as longitude lines, stacks as latitude lines
+    //
+    let tempVertices = [];
+    let tempEdges = [];
+    
+    let x, y, z, xy;                              // vertex position
+    let nx, ny, nz, lengthInv = 1.0 / radius;    // vertex normal
+    let s, t;                                     // vertex texCoord
+
+    let sectorStep = 2 * Math.PI / sectorCount;
+    let stackStep = Math.PI / stackCount;
+    let sectorAngle, stackAngle;
+
+    let edgeIndex = 0;
+
+    for (let i = 0; i <= stackCount; ++i) {
+        stackAngle = Math.PI / 2 - i * stackStep;        // starting from pi/2 to -pi/2
+        xy = radius * Math.cos(stackAngle);             // r * cos(u) 
+        z = radius * Math.sin(stackAngle);              // r * sin(u)
+
+        let curEdges = [];
+        // add (sectorCount+1) vertices per stack
+        // the first and last vertices have same position and normal, but different tex coords
+        for(let j = 0; j <= sectorCount; ++j) {
+            sectorAngle = j * sectorStep;           // starting from 0 to 2pi
+
+            // vertex position (x, y, z)
+            x = xy * Math.cos(sectorAngle);             // r * cos(u) * cos(v)
+            y = xy * Math.sin(sectorAngle);             // r * cos(u) * sin(v)
+            
+            tempVertices.push(new Vector4(x, y, z, 1));
+            
+            curEdges.push(edgeIndex); // We are building a ring for a single stack here
+            
+            if (i < stackCount && i > 1) { // We don't want to build connections past last stack (does not exist)
+                tempEdges.push([i*j, i*j+sectorCount+1]);     // We are building connection between different stacks here
+            }
+
+            edgeIndex++;
+        }
+        tempEdges.push(curEdges);
+
+        // Connect stacks together
+        
+    }
+
+    // Connect sectors together
+    //for (let i = 0; i<= st)
+
+    // (1) First apply minor translation so that model is centered about its geometry
+    // (2) Then apply animation transformation
+    // (3) Then translate to "center"
+    let translateTwo = new Matrix(4, 4);
+    mat4x4Translate(translateTwo, center.x, center.y, center.z);
+    for (let i = 0; i < tempVertices.length; i++) {
+        // Vertex rotation and translation
+        tempVertices[i] = Matrix.multiply([translateTwo, myModel.matrix, tempVertices[i]]);
+    }
+
+    //console.log(vertices);
+    myModel['vertices'] = tempVertices;
+    myModel['edges'] = tempEdges;
 }
 
 // Get outcode for vertex (parallel view volume)
@@ -644,6 +715,7 @@ function onKeyDown(event) {
     let u = scene.view.vup.cross(n);
     u.normalize();
     */
+    window.requestAnimationFrame(animate);
 
     let n = scene.view.prp.subtract(scene.view.srp);
     n.normalize();

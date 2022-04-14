@@ -59,8 +59,8 @@ function init() {
             {
                 type: "cube",
                 center: Vector4(8, 6, -20, 1),
-                width: 16,
-                height: 12,
+                width: 4,
+                height: 4,
                 depth: 4,
                 animation: {
                     axis: "x",
@@ -91,7 +91,7 @@ function init() {
             },
             {
                 type: "sphere",
-                center: Vector4(8, 6, -5, 1),
+                center: Vector4(8, 20, -12, 1),
                 radius: 4,
                 slices: 12,
                 stacks: 8,
@@ -102,9 +102,6 @@ function init() {
             }
         ]
     };
-
-    // Calculate vertices for non-generic models
-    //calculateVerticesAndEdges();
 
     // event handler for pressing arrow keys
     document.addEventListener('keydown', onKeyDown, false);
@@ -128,15 +125,6 @@ function animate(timestamp) {
     // Therefore, you should calculate how much to rotate the model based on how much time has passed.
     // If someone has a faster refresh rate on their monitor, then less time would have passed since the previous frame and we should not rotate quite as much.
     // step 2: transform models based on time
-
-    // We will need to find a theta based on the rps of a model and the current time
-    //console.log(time % 100);
-
-    //console.log(time % 100 < 10);
-
-    // I KNOW THIS IS INCORRECT!! THE MODELS SHOULD NOT ROTATE ABOUT THE ORIGIN OF THE VIEW VOLUME, BUT RATHER THE MODEL ITSELF.
-    // I WILL FIX THIS TOMORROW!!!
-    // limit refresh
     for (let i = 0; i < scene.models.length; i++) {
         // If model has animation property, we need to rotate it about the specified axis by theta degrees specified by our rotations per second (rps) and time.
         // More exactly. We are trying to determining how many revolutions have occured (i.e. theta [radians]) = rps [rev/s] x time [ms] x [2 pi rad / rev] * [1 s / 1000 ms].
@@ -170,13 +158,11 @@ function animate(timestamp) {
 
     // step 4: request next animation frame (recursively calling same function)
     // (may want to leave commented out while debugging initially)
-
     window.requestAnimationFrame(animate);
 }
 
 // Main drawing code - use information contained in variable `scene`
 function drawScene() {
-    //console.log(scene);
 
     // Create view matrix
     let transformView;
@@ -201,7 +187,6 @@ function drawScene() {
     }
 
     // For each model in the scene, we need to follow this process:
-        // Step 0 apply animation based on time to each model vertex
         // Step 1 transform all verts into the connical view volume
         // Step 2 clip all lines against the connonical view volume
         // Step 3 project clipped lines into 2D and scale to match screen coordinates
@@ -242,7 +227,6 @@ function drawScene() {
                     vec4NonHomogeneous(project_vertZero);
                     vec4NonHomogeneous(project_vertOne);
                     drawLine(project_vertZero.x, project_vertZero.y, project_vertOne.x, project_vertOne.y);
-                    //console.log("scene has been drawn");
                 }
             }
         }
@@ -400,58 +384,52 @@ function calculateConeVerticesAndEdges(myModel, center, radius, height, sides) {
 }
 
 // Calculate vertices and edges for a spherical model
-function calculateSphereVerticesAndEdges(myModel, center, radius, sectorCount, stackCount) { // think of slices as longitude lines, stacks as latitude lines
-    //
+function calculateSphereVerticesAndEdges(myModel, center, radius, slices, stacks) { // think of slices as longitude lines, stacks as latitude lines
+
     let tempVertices = [];
     let tempEdges = [];
     
-    let x, y, z, xy;                              // vertex position
-    let nx, ny, nz, lengthInv = 1.0 / radius;    // vertex normal
-    let s, t;                                     // vertex texCoord
+    let x, y, z, xy; // vertex positions
 
-    let sectorStep = 2 * Math.PI / sectorCount;
-    let stackStep = Math.PI / stackCount;
+    let sectorStep = 2 * Math.PI / slices;
+    let stackStep = Math.PI / stacks;
     let sectorAngle, stackAngle;
 
+    // Starting edge index
     let edgeIndex = 0;
 
-    for (let i = 0; i <= stackCount; ++i) {
-        stackAngle = Math.PI / 2 - i * stackStep;        // starting from pi/2 to -pi/2
-        xy = radius * Math.cos(stackAngle);             // r * cos(u) 
-        z = radius * Math.sin(stackAngle);              // r * sin(u)
+    // Go through each stack
+    for (let i = 0; i <= stacks; ++i) {
+        stackAngle = Math.PI / 2 - i * stackStep;  
+        xy = radius * Math.cos(stackAngle);             
+        z = radius * Math.sin(stackAngle);              
 
+        // For adding stack ring
         let curEdges = [];
-        // add (sectorCount+1) vertices per stack
-        // the first and last vertices have same position and normal, but different tex coords
-        for(let j = 0; j <= sectorCount; ++j) {
-            sectorAngle = j * sectorStep;           // starting from 0 to 2pi
+        
+        // Go through each slice (or sector)
+        for(let j = 0; j <= slices; ++j) {
+            sectorAngle = j * sectorStep;           
 
             // vertex position (x, y, z)
-            x = xy * Math.cos(sectorAngle);             // r * cos(u) * cos(v)
-            y = xy * Math.sin(sectorAngle);             // r * cos(u) * sin(v)
+            x = xy * Math.cos(sectorAngle);
+            y = xy * Math.sin(sectorAngle);
             
             tempVertices.push(new Vector4(x, y, z, 1));
             
             curEdges.push(edgeIndex); // We are building a ring for a single stack here
             
-            if (i > 0) { // We don't want to build connections past last stack (does not exist)
-                tempEdges.push([edgeIndex, edgeIndex-(sectorCount+1)]);     // We are building connection between different stacks here
+            if (i > 0) { // We are building "backwards" so we can skip the first stack
+                tempEdges.push([edgeIndex, edgeIndex-(slices+1)]);     // We are building connection between different stacks here
             }
 
             edgeIndex++;
         }
-        tempEdges.push(curEdges);
-
-        // Connect stacks together
-        
+        tempEdges.push(curEdges);        
     }
 
-    // Connect sectors together
-    //for (let i = 0; i<= st)
-
-    // (1) First apply minor translation so that model is centered about its geometry
-    // (2) Then apply animation transformation
-    // (3) Then translate to "center"
+    // (1) Then apply animation transformation
+    // (2) Then translate to "center"
     let translateTwo = new Matrix(4, 4);
     mat4x4Translate(translateTwo, center.x, center.y, center.z);
     for (let i = 0; i < tempVertices.length; i++) {
@@ -459,7 +437,6 @@ function calculateSphereVerticesAndEdges(myModel, center, radius, sectorCount, s
         tempVertices[i] = Matrix.multiply([translateTwo, myModel.matrix, tempVertices[i]]);
     }
 
-    //console.log(vertices);
     myModel['vertices'] = tempVertices;
     myModel['edges'] = tempEdges;
 }
@@ -559,7 +536,6 @@ function clipLineParallel(line) {
 
             //((1-t)*value0)+(t*value1)
             if(position == 0) { 
-                
                 t = (-1-p0.x)/delta_x;
             } else if(position == 1) {
                 t = (1-p0.x)/delta_x;
@@ -580,29 +556,23 @@ function clipLineParallel(line) {
             let new_point = Vector4(new_pointx,new_pointy,new_pointz,1);
             //replace selected endpoint with this intersection point
             if(out_codeOut === out0){
-               console.log("Yay!");
+                console.log("Yay!");
                 p0 = new_point;
                 // Recalculate enpoint's outcode
                 out0 = outcodeParallel(p0);
-                
             }
             else{
-                
                 p1 = new_point;
-                
                 //recalculate enpoint's outcode
                 out1 = outcodeParallel(p1);
-                
             } 
             //try to accept/reject again (repeat process)
         }
     }
-
 }
 
 // Clip line - should either return a new line (with two endpoints inside view volume) or null (if line is completely outside view volume)
 function clipLinePerspective(line, z_min) {
-
     let result = null;
     let p0 = Vector4(line.pt0.x, line.pt0.y, line.pt0.z, line.pt0.w); // end point 0
     let p1 = Vector4(line.pt1.x, line.pt1.y, line.pt1.z, line.pt1.w); // end point 1
@@ -634,30 +604,18 @@ function clipLinePerspective(line, z_min) {
             if(out0 != 000000){
                 point_out = p0;
                 out_codeOut = out0;
-               // console.log("out0: " + out0);
+                // console.log("out0: " + out0);
             }
             else{
                 point_out = p1;
                 out_codeOut = out1;
-              //  console.log("out1: " + out1);
+                //  console.log("out1: " + out1);
             }
 
             // find the first bit set to 1 in the selected endpoint's outcode
-
-            // No, this shouldn't be point_one... why are we trying to convert a Vec4 into a string outcode....
-            //let string_outcode = "" + point_one + "";
-            //let outcode_point = outcodePerspective(point_one, z_min);
             var base2 = (out_codeOut).toString(2);
-            //console.log("outcode_point: " + outcode_point);
-            //console.log(base2);
             let string_outcode = "" + base2 + "";
-           // console.log("here"+string_outcode); //add zeros to the left
-
             position = 6 - string_outcode.length;
-
-            //console.log("position: " + position);
-            //}onsole.log(point_one)
-            //console.log(string_outcode);
 
             // Find parameters
             let delta_x = (p1.x - p0.x);
@@ -688,34 +646,23 @@ function clipLinePerspective(line, z_min) {
 
             // Replace selected endpoint with this intersection point
             if(out_codeOut === out0){
-
                 p0 = new_point;
                 // Recalculate enpoint's outcode
                 out0 = outcodePerspective(p0);
-
             }
             else{
-
                 p1 = new_point;
-
                 //recalculate enpoint's outcode
                 out1 = outcodePerspective(p1);
 
             }
         }
     }
-    //return {pt0:p0,pt1:p1}; // return the clipped line
 }
 
 // Called when user presses a key on the keyboard down
 function onKeyDown(event) {
-    /*
-    let n = scene.view.prp.subtract(scene.view.srp);
-    n.normalize();
-    let u = scene.view.vup.cross(n);
-    u.normalize();
-    */
-    window.requestAnimationFrame(animate);
+    //window.requestAnimationFrame(animate);
 
     let n = scene.view.prp.subtract(scene.view.srp);
     n.normalize();
@@ -775,48 +722,6 @@ function onKeyDown(event) {
             break;
     }
 }
-
-/*
-// Rodrigues rotation formula based on: https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
-function rodriguesRotFormula(a, b, theta) {
-    // Copy to ensure we are not changing values
-    let a_copy1 = new Vector3(a.x, a.y, a.z);
-    let a_copy2 = new Vector3(a.x, a.y, a.z);
-    let a_copy3 = new Vector3(a.x, a.y, a.z);
-
-    let b_copy1 = new Vector3(b.x, b.y, b.z);
-    let b_copy2 = new Vector3(b.x, b.y, b.z);
-    let b_copy3 = new Vector3(b.x, b.y, b.z);
-
-    // Sorry in advance for this mess. It took me a long time to figure out the matrix.js file for
-    // vector creation and variable instance handling. I feel confident in my Computer Graphics
-    // and math understanding of the problem, but trying to learn the matrix.js vector return
-    // types really took a lot of time.
-
-    // Part one
-    a_copy1.scale((Math.cos(theta)));
-    let partOne = a_copy1
-    console.log(partOne);
-
-    // Part two
-    let temp = b.cross(a);
-    temp.scale(Math.sin(theta));
-    let partTwo = temp;
-    console.log(partTwo);
-
-    // Parth
-    let temp2 = b.dot(a);
-    b_copy1.scale(temp2*(1-Math.cos(theta)));
-    let partThree = b_copy1;
-    console.log(partThree);
-
-    let outVec = partOne.add(partTwo);
-    let outVecFinal = outVec.add(partThree);
-
-    console.log(outVecFinal);
-    //return partOne+partTwo+partThree;
-}
-*/
 
 ///////////////////////////////////////////////////////////////////////////
 // No need to edit functions beyond this point

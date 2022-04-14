@@ -32,8 +32,8 @@
         {
             "type": "cube",
             "center": [8, 6, -20],
-            "width": 16,
-            "height": 12,
+            "width": 4,
+            "height": 4,
             "depth": 4,
             "animation": {
                 "axis": "x",
@@ -61,6 +61,18 @@
                 "axis": "y",
                 "rps": 0.5
             }
+        },
+        {
+            "type": "sphere",
+            "center": [8, 20, -12],
+            "radius": 4,
+            "slices": 12,
+            "stacks": 8,
+            "animation": {
+                "axis": "y",
+                "rps": 0.1
+            }
         }
+        
     ]
 }

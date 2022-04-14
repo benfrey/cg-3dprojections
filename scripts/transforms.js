@@ -190,6 +190,7 @@ function vec4NonHomogeneous(vec4) {
 }
 
 // set values of existing 4x4 matrix in order to transform SRP about PRP
+// Found the outMat value settings based on the following guide: https://docs.google.com/viewer?a=v&pid=sites&srcid=ZGVmYXVsdGRvbWFpbnxnbGVubm11cnJheXxneDoyMTJiZTZlNzVlMjFiZTFi
 function mat4x4SwingSRP(rotAxisVec, PRP, theta) {
     let u = rotAxisVec.x;
     let v = rotAxisVec.z;

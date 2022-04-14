@@ -24,7 +24,7 @@ function init() {
     // initial scene... feel free to change this
     scene = {
         view: {
-            type: 'parallel',
+            type: 'perspective',
             prp: Vector3(44, 20, -16),
             srp: Vector3(20, 20, -40),
             vup: Vector3(0, 1, 0),
@@ -185,7 +185,6 @@ function drawScene() {
         projectView = Matrix.multiply([windowView,mat4x4MPer() ]);
     } else if (scene.view.type == "parallel") {
         projectView = Matrix.multiply([windowView,mat4x4MPar()]);
-        console.log("You made it my little kitten");
     } else {
         console.log("Error on scene projection")
     }

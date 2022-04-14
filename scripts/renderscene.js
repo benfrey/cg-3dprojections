@@ -24,7 +24,7 @@ function init() {
     // initial scene... feel free to change this
     scene = {
         view: {
-            type: 'perspective',
+            type: 'parallel',
             prp: Vector3(44, 20, -16),
             srp: Vector3(20, 20, -40),
             vup: Vector3(0, 1, 0),
@@ -197,6 +197,7 @@ function drawScene() {
         projectView = Matrix.multiply([windowView,mat4x4MPer() ]);
     } else if (scene.view.type == "parallel") {
         projectView = Matrix.multiply([windowView,mat4x4MPar()]);
+        console.log("You made it my little kitten");
     } else {
         console.log("Error on scene projection")
     }
@@ -225,15 +226,30 @@ function drawScene() {
                 
                 //Step 2 clip all lines against the connonical view volume
                 let line = {pt0:vertex_zero,pt1:vertex_one};
-                let clippedLine = clipLinePerspective(line,-scene.view.clip[4]/scene.view.clip[5]);
+                let clippedLine;
+                if (scene.view.type == "perspective") {
+                
+                     clippedLine = clipLinePerspective(line,-scene.view.clip[4]/scene.view.clip[5]);
+                } else if (scene.view.type == "parallel") {
+                
+                     clippedLine = clipLineParallel(line);
+                    console.log("You made it my little kitten");
+                } else {
+                    console.log("Error on scene projection")
+                } 
+               // let line = {pt0:vertex_zero,pt1:vertex_one};
+                //let clippedLine = clipLinePerspective(line,-scene.view.clip[4]/scene.view.clip[5]);
                 
                 if(clippedLine != null){
                     //Step 3 project clipped lines into 2D and scale to match screen coordinates 
                     let project_vertZero = Matrix.multiply([projectView,clippedLine.pt0]);
                     let project_vertOne = Matrix.multiply([projectView,clippedLine.pt1]);
+                    console.log(project_vertZero);
+                    console.log(clippedLine);
                     vec4NonHomogeneous(project_vertZero);
                     vec4NonHomogeneous(project_vertOne);
                     drawLine(project_vertZero.x, project_vertZero.y, project_vertOne.x, project_vertOne.y);
+                    console.log("scene has been drawn");
                 }
             }
         }
@@ -502,25 +518,25 @@ function clipLineParallel(line) {
             }
             else if(position ==2){
                 //clip against bottom edge
-                b = (point_one.y - ((delta_y/delta_x)*point_one.x));
-                x = (point_one.y / (delta_y/delta_x)) - b;
+                b = (point_out.y - ((delta_y/delta_x)*point_out.x));
+                x = (point_out.y / (delta_y/delta_x)) - b;
                 newPoint = [x, -(view.height / 2)];//x, bottom_edge - don't know if these are right    
             }
             else if(position == 3){
                 //clip against top edge
-                b = (point_one.y - ((delta_y/delta_x)*point_one.x));
-                x = (point_one.y / (delta_y/delta_x)) - b;
+                b = (point_out.y - ((delta_y/delta_x)*point_out.x));
+                x = (point_out.y / (delta_y/delta_x)) - b;
                 newPoint = [x, view.height / 2];//x, top_edge - don't know if these are right  
             }else if(position==4){ //most likely not correct
                 //Far
-                b = (point_one.z - ((delta_z/delta_x)*point_one.x));
-                z = (point_one.z / (delta_z/delta_x)) - b;
+                b = (point_out.z - ((delta_z/delta_x)*point_out.x));
+                z = (point_out.z / (delta_z/delta_x)) - b;
                 newPoint = [x, -(view.height / 2)];//x, bottom_edge - don't know if these are right
             }else if (position == 5){ //need to do
                 //Near 
             }
             //replace selected endpoint with this intersection point
-            if(point_one === p0){
+            if(point_out === p0){
                 p0 = newPoint;
                 //recalculate enpoint's outcode
                 out0 = outcodeParallel(p0);
@@ -645,11 +661,12 @@ function clipLinePerspective(line, z_min) {
 
 // Called when user presses a key on the keyboard down
 function onKeyDown(event) {
-
+    
     let n = scene.view.prp.subtract(scene.view.srp);
     n.normalize();
     let u = scene.view.vup.cross(n);
     u.normalize();
+    let v = n.cross(u);
     //console.log(u);
     switch (event.keyCode) {
 

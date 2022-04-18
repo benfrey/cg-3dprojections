@@ -1,0 +1,140 @@
+{
+    "view": {
+        "type": "perspective",
+        "prp": [32, 20, 70],
+        "srp": [30, 20, 20],
+        "vup": [0, 1, 0],
+        "clip": [-19, 5, -10, 8, 12, 100]
+    },
+    "models": [
+        {
+            "type": "generic",
+            "vertices": [
+                [10,  0, 30, 1],
+                [30,  0, 30, 1],
+                [30, 12, 30, 1],
+                [20, 20, 30, 1],
+                [10, 12, 30, 1],
+                [10,  0, 0, 1],
+                [30,  0, 0, 1],
+                [30, 12, 0, 1],
+                [20, 20, 0, 1],
+                [10, 12, 0, 1]],
+            "edges": [
+                [0, 1, 2, 3, 4, 0],
+                [5, 6, 7, 8, 9, 5],
+                [0, 5],
+                [1, 6],
+                [2, 7],
+                [3, 8],
+                [4, 9]]
+        },
+        {
+            "type": "generic",
+            "vertices": [
+                [19.5,  0, 30, 1],
+                [21.5,  0, 30, 1],
+                [21.5, 6, 30, 1],
+                [19.5, 6, 30, 1]],
+            "edges": [
+                [0, 1, 2, 3, 0]]
+        },
+        {
+            "type": "generic",
+            "vertices": [
+                [19.5,  0, 30, 1],
+                [21.5,  0, 30, 1],
+                [21.5, 0, 60, 1],
+                [19.5, 0, 60, 1]],
+            "edges": [
+                [0, 1, 2, 3, 0]]
+        },
+        {
+            "type": "cube",
+            "center": [20, 12.5, 32],
+            "width": 12,
+            "height": 1,
+            "depth": 4
+        },
+        {
+            "type": "cylinder",
+            "center": [16, 6, 32],
+            "radius": 2,
+            "height": 12,
+            "sides": 8
+        },
+        {
+            "type": "cylinder",
+            "center": [24, 6, 32],
+            "radius": 2,
+            "height": 12,
+            "sides": 8
+        },
+        {
+            "type": "cylinder",
+            "center": [6, 10, 27],
+            "radius": 3,
+            "height": 20,
+            "sides": 12,
+            "animation": {
+                "axis": "y",
+                "rps": 0.1
+            }
+        },
+        {
+            "type": "cylinder",
+            "center": [34, 10, 27],
+            "radius": 3,
+            "height": 20,
+            "sides": 12,
+            "animation": {
+                "axis": "y",
+                "rps": 0.1
+            }
+        },
+        {
+            "type": "cone",
+            "center": [6, 23, 27],
+            "radius": 3,
+            "height": 6,
+            "sides": 12,
+            "animation": {
+                "axis": "y",
+                "rps": -0.1
+            }
+        },
+        {
+            "type": "cone",
+            "center": [34, 23, 27],
+            "radius": 3,
+            "height": 6,
+            "sides": 12,
+            "animation": {
+                "axis": "y",
+                "rps": -0.1
+            }
+        },
+        {
+            "type": "sphere",
+            "center": [6, 29, 27],
+            "radius": 3,
+            "slices": 8,
+            "stacks": 8,
+            "animation": {
+                "axis": "z",
+                "rps": 0.3
+            }
+        },
+        {
+            "type": "sphere",
+            "center": [34, 29, 27],
+            "radius": 3,
+            "slices": 8,
+            "stacks": 8,
+            "animation": {
+                "axis": "z",
+                "rps": 0.3
+            }
+        }
+    ]
+}

@@ -388,7 +388,7 @@ function calculateSphereVerticesAndEdges(myModel, center, radius, slices, stacks
 
     let tempVertices = [];
     let tempEdges = [];
-    
+
     let x, y, z, xy; // vertex positions
 
     let sectorStep = 2 * Math.PI / slices;
@@ -400,32 +400,32 @@ function calculateSphereVerticesAndEdges(myModel, center, radius, slices, stacks
 
     // Go through each stack
     for (let i = 0; i <= stacks; ++i) {
-        stackAngle = Math.PI / 2 - i * stackStep;  
-        xy = radius * Math.cos(stackAngle);             
-        z = radius * Math.sin(stackAngle);              
+        stackAngle = Math.PI / 2 - i * stackStep;
+        xy = radius * Math.cos(stackAngle);
+        z = radius * Math.sin(stackAngle);
 
         // For adding stack ring
         let curEdges = [];
-        
+
         // Go through each slice (or sector)
         for(let j = 0; j <= slices; ++j) {
-            sectorAngle = j * sectorStep;           
+            sectorAngle = j * sectorStep;
 
             // vertex position (x, y, z)
             x = xy * Math.cos(sectorAngle);
             y = xy * Math.sin(sectorAngle);
-            
+
             tempVertices.push(new Vector4(x, y, z, 1));
-            
+
             curEdges.push(edgeIndex); // We are building a ring for a single stack here
-            
+
             if (i > 0) { // We are building "backwards" so we can skip the first stack
                 tempEdges.push([edgeIndex, edgeIndex-(slices+1)]);     // We are building connection between different stacks here
             }
 
             edgeIndex++;
         }
-        tempEdges.push(curEdges);        
+        tempEdges.push(curEdges);
     }
 
     // (1) Then apply animation transformation
@@ -493,7 +493,7 @@ function outcodePerspective(vertex, z_min) {
 function clipLineParallel(line) {
     let result = null;
     let p0 = Vector4(line.pt0.x, line.pt0.y, line.pt0.z, line.pt0.w); // end point 0
-    let p1 = Vector4(line.pt1.x, line.pt1.y, line.pt1.z, line.pt1.w); // end point 
+    let p1 = Vector4(line.pt1.x, line.pt1.y, line.pt1.z, line.pt1.w); // end point
     let out0 = outcodeParallel(p0);
     let out1 = outcodeParallel(p1);
     let repeat = 1;
@@ -507,7 +507,7 @@ function clipLineParallel(line) {
             //both points are outside the line, reject by returning null
             return result;
         }
-        else if((out0 | out1) == 0){       
+        else if((out0 | out1) == 0){
             //check if both are inside, to accept TRIVIAL ACCEPT
             repeat = 0;
             //both points are inside the line, accept by returning line with same endpoints
@@ -535,7 +535,7 @@ function clipLineParallel(line) {
             let t;
 
             //((1-t)*value0)+(t*value1)
-            if(position == 0) { 
+            if(position == 0) {
                 t = (-1-p0.x)/delta_x;
             } else if(position == 1) {
                 t = (1-p0.x)/delta_x;
@@ -565,7 +565,7 @@ function clipLineParallel(line) {
                 p1 = new_point;
                 //recalculate enpoint's outcode
                 out1 = outcodeParallel(p1);
-            } 
+            }
             //try to accept/reject again (repeat process)
         }
     }
@@ -669,7 +669,9 @@ function onKeyDown(event) {
     let u = scene.view.vup.cross(n);
     u.normalize();
     let v = n.cross(u);
-    v.normalize();
+
+    // We want to rotate around the v-axis also known as the the y-axis
+    let myAxis = new Vector4(0, 0, 1, 1);
 
     let theta = 5 * Math.PI/180; // 5 degrees
     let transformView = new Matrix(4, 4);
@@ -678,7 +680,7 @@ function onKeyDown(event) {
     switch (event.keyCode) {
         case 37: // LEFT Arrow
             // Rotate about v (at scene.view.prp) through angle theta
-            transformView = mat4x4SwingSRP(v, scene.view.prp, theta);
+            transformView = mat4x4SwingSRP(myAxis, scene.view.prp, theta);
             newSRP = Matrix.multiply([transformView, newSRP]);
 
             // Update scene
@@ -690,7 +692,7 @@ function onKeyDown(event) {
             break;
         case 39: // RIGHT Arrow
             // Rotate about v (at scene.view.prp) through angle -theta
-            transformView = mat4x4SwingSRP(v, scene.view.prp, -theta);
+            transformView = mat4x4SwingSRP(myAxis, scene.view.prp, -theta);
             newSRP = Matrix.multiply([transformView, newSRP]);
 
             // Update scene

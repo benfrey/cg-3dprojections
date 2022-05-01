@@ -27,7 +27,7 @@ function init() {
             type: 'perspective',
             prp: Vector3(44, 20, -16),
             srp: Vector3(20, 20, -40),
-            vup: Vector3(0, 1, 0),
+            vup: Vector3(1, 1, 0),
             clip: [-19, 5, -10, 8, 12, 100]
         },
         models: [
@@ -114,7 +114,7 @@ function init() {
 
 // Animation loop - repeatedly calls rendering code
 function animate(timestamp) {
-    console.log(scene);
+    //console.log(scene);
     ctx.clearRect(0, 0, view.width, view.height);
     // step 1: calculate time (time since start)
     let time = timestamp - start_time;
@@ -529,23 +529,22 @@ function clipLineParallel(line) {
 
             // Find parameters
             //calculate the intersection point between the line and corresponding edge
-            let delta_x =  (p1.x - p0.x);
-            let delta_y = ( p1.y - p0.y);
-            let delta_z = ( p1.z - p0.z);
+            let delta_x = (p1.x - p0.x);
+            let delta_y = (p1.y - p0.y);
+            let delta_z = (p1.z - p0.z);
             let t;
 
-            //((1-t)*value0)+(t*value1)
-            if(position == 0) {
+            if (out_codeOut % 32 == 0) {
                 t = (-1-p0.x)/delta_x;
-            } else if(position == 1) {
+            } else if (out_codeOut % 16 == 0) {
                 t = (1-p0.x)/delta_x;
-            } else if(position == 2) {
+            } else if (out_codeOut % 8 == 0) {
                 t = (-1-p0.y)/delta_y;
-            } else if (position == 3) {
+            } else if (out_codeOut % 4 == 0) {
                 t = (1-p0.y)/delta_y;
-            } else if (position == 4) {
-                t = (-p0.z-1)/delta_z;
-            } else if (position == 5) {
+            } else if (out_codeOut % 2 == 0) {
+                t = (-1-p0.z)/(delta_z);
+            } else if (out_codeOut % 1 == 0) {
                 t = -p0.z/delta_z;
             }
 
@@ -612,32 +611,31 @@ function clipLinePerspective(line, z_min) {
                 //  console.log("out1: " + out1);
             }
 
-            // find the first bit set to 1 in the selected endpoint's outcode
-            var base2 = (out_codeOut).toString(2);
-            let string_outcode = "" + base2 + "";
-            position = 6 - string_outcode.length;
-
             // Find parameters
             let delta_x = (p1.x - p0.x);
             let delta_y = (p1.y - p0.y);
             let delta_z = (p1.z - p0.z);
             let t;
 
-            // Calculate parametric value t
-            if(position == 0) {
+            // Calculate parametric value where
+            // find the where each bit set to 1 in the selected endpoint's outcode
+            // left (32), right (16), bottom (8), top (4), far (2), near (1)
+            // NOTE: Sometimes, we may have a value of 33 which indicates left and near.
+            // this means that we must select near precednce over left. The precedeces are: near, back, left, top, right, bottom
+            if (out_codeOut % 32 == 0) { // left
                 t = (-p0.x + p0.z)/(delta_x-delta_z);
-            } else if(position == 1) {
+            } else if(out_codeOut % 16 == 0) { // right
                 t = (p0.x + p0.z)/(-delta_x-delta_z);
-            } else if(position == 2) {
+            } else if(out_codeOut % 8 == 0) { // bottom
                 t = (-p0.y + p0.z)/(delta_y-delta_z);
-            } else if (position == 3) {
+            } else if (out_codeOut % 4 == 0) { // top
                 t = (p0.y + p0.z)/(-delta_y-delta_z);
-            } else if (position == 4) {
+            } else if (out_codeOut % 2 == 0) { // far
                 t = (-p0.z - 1)/(delta_z);
-            } else if (position == 5) {
-                t = (-p0.z + z_min)/(-delta_z);
+            } else if (out_codeOut % 1 == 0) { // near
+                t = (p0.z - z_min)/(-delta_z);
             }
-
+            
             // Use parametric equations to find new components
             let new_pointx = (1-t)*p0.x+t*p1.x;
             let new_pointy = (1-t)*p0.y+t*p1.y;
@@ -662,7 +660,7 @@ function clipLinePerspective(line, z_min) {
 
 // Called when user presses a key on the keyboard down
 function onKeyDown(event) {
-    //window.requestAnimationFrame(animate);
+    window.requestAnimationFrame(animate);
 
     let n = scene.view.prp.subtract(scene.view.srp);
     n.normalize();
@@ -671,7 +669,9 @@ function onKeyDown(event) {
     let v = n.cross(u);
 
     // We want to rotate around the v-axis also known as the the y-axis
-    let myAxis = new Vector4(0, 0, 1, 1);
+    //let myAxis = new Vector4(0, 1, 0, 1);
+    v = Vector4(v.x, v.z, v.y, 1);
+    let myAxis = v;
 
     let theta = 5 * Math.PI/180; // 5 degrees
     let transformView = new Matrix(4, 4);

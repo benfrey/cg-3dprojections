@@ -1,72 +1,28 @@
 # 3D Projections for Wireframe Rendering
-3D Projections starter code using the HTML5 Canvas 2D API
+Ben Frey, Emma Torres, and Terence Lewis
 
-## Task
-Implement 3D line drawing by projecting models onto the view-plane. You will use HTML's Canvas 2D API.
+## Project Overview 
+Project Assignment Outline PDF: project_assignment.pdf
+
+This project relates to my CISC 480: Senior Capstone course because it required significant labor division and intra-team coordination to complete all project components on time. While my partners and I were successfully able to complete all project components, ensuring that each component of the project met proper functionality specifications required multiple visits with Dr. Marrinan.
+
+NOTE: All code in this repository has been cleaned up since the completion of this course to be featured in my senior portfolio. Additional documentation has been provided under "/docs" for future usage.
+
+## Project Description
+For this project, we had to implement 3D line drawing by projecting models onto the view-plane. We used HTML's Canvas 2D API for drawing 3D lines to the browser window. Implementation of this assignment required a thorough understanding of the computer graphics pipeline, including how the view, model, and projections matrices work with eachoter to produce animated models in the proper 3D space.
 </br>
 Project outline below:
 
-## 3D Projections (to earn a C: 45 pts)
-- Implement perspective projection for 3D models: 35 pts
-  - Transform models into canonical view volume
-    - Implement the matrix functions in transforms.js
-  - Implement Cohen-Sutherland 3D line clipping
-  - Project onto view plane
-  - Draw 2D lines
-- Implement camera movement to change the view of a scene: 10 pts
-  - A/D keys: translate the PRP and SRP along the u-axis
-  - W/S keys: translate the PRP and SRP along the n-axis
+## Executing the Project
+For a quick start, check out the deployed version of this project at [benfrey.github.io/cg-3dprojections](https://benfrey.github.io/cg-3dprojections). Otherwise, simply follow the steps below: 
+1. $git clone https://github.com/benfrey/cg-3dprojections
+2. $cd cg-3dprojections
+3. $code .
+4. Install the "Live Server" extension in Visual Studio Code.
+5. Click "Go Live" and navigate to project URL in a browser.
+</br>
+Note: Running "$code ." will open the project folder in Visual Studio Code.
 
-## Additional features (to earn a B or A)
-- Implement parallel projection for 3D models: 5 pts
-  - Follows same steps as perspective
-- Generate vertices and edges for common models: 5 pts
-  - Cube: defined by center point, width, height, and depth (1 pt)
-  - Cone: defined by center point of base, radius, height, and number of sides (1 pt)
-  - Cylinder: defined by center point, radius, height, and number of sides (1 pt)
-  - Sphere: defined by center point, radius, number of slices, and number of stacks (2 pts)
-- Allow for models to have a rotation animation: 5 pts
-  - Can be about the x, y, or z axis
-  - Defined in terms of revolutions per second
-- Left/right arrow keys: rotate SRP around the v-axis with the PRP as the origin: 5 pts
-
-## Scene
-Scenes will be defined as a JavaScript object. The scene will contain both view parameters and a description of the models.
-
-view:
-- type (perspective / parallel)
-- prp
-- srp
-- vup
-- clip (array - left, right, bottom, top, near, far)
-
-models (array):
-- type = generic
-  - vertices (array of Vector4)
-  - edges (array of lines)
-  - line: array of vertex indices
-- type = cube
-  - center (Vector4)
-  - width
-  - height
-  - depth
-- type = cone
-  - center (Vector4)
-  - radius
-  - height
-  - sides
-- type = cylinder
-  - center (Vector4)
-  - radius
-  - height
-  - sides
-- type = sphere
-  - center (Vector4)
-  - radius
-  - slices (think number of longitude lines on a globe)
-  - stacks (think number of latitude lines on a globe)
-- All modes also optionally may have an 'animation' field
-animation
-  - axis (x, y, or z)
-  - rps (revolutions per second)
-*Note: sample models can be found in the starter code.
+## Running Example
+An example of the project running in a browser can be seen here:
+![Animated 3D Projection Example](docs/project_demonstration.gif)

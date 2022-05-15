@@ -27,7 +27,7 @@ function init() {
             type: 'perspective',
             prp: Vector3(44, 20, -16),
             srp: Vector3(20, 20, -40),
-            vup: Vector3(1, 1, 0),
+            vup: Vector3(0, 1, 0),
             clip: [-19, 5, -10, 8, 12, 100]
         },
         models: [

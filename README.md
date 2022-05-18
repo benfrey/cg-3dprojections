@@ -2,7 +2,7 @@
 Ben Frey, Emma Torres, and Terence Lewis
 
 ## Project Overview 
-Project Assignment Outline PDF: project_assignment.pdf
+Project Assignment Outline PDF: [project_assignment.pdf](/docs/project_assignment.pdf)
 
 This project relates to my CISC 480: Senior Capstone course because it required significant labor division and intra-team coordination to complete all project components on time. While my partners and I were successfully able to complete all project components, ensuring that each component of the project met proper functionality specifications required multiple visits with Dr. Marrinan.
 
